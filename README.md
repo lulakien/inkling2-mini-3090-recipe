@@ -52,7 +52,7 @@ Requirements: Linux, Docker with the NVIDIA Container Toolkit, an NVIDIA driver 
 about 20 GB of disk for the model and 36 GB for the image.
 
 ```bash
-git clone <this repo> && cd inkling2-mini-3090-recipe
+git clone https://github.com/lulakien/inkling2-mini-3090-recipe && cd inkling2-mini-3090-recipe
 hf download thinkingmachines/Inkling-2-Mini --revision ed40e7da625f594fc9c4990f5f66be24873c22d7 \
   --local-dir ~/models/Inkling-2-Mini
 . launch/image.env && docker pull "$IMAGE"
