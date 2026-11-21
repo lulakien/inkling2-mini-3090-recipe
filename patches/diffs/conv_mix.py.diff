@@ -1,0 +1,13 @@
+--- a/vllm/models/inkling2/nvidia/ops/conv_mix.py
++++ b/vllm/models/inkling2/nvidia/ops/conv_mix.py
+@@ -89,7 +89,9 @@
+     )
+     if sp is None:
+         assert halo == 0 and positions.shape[0] == num_tokens and x.dim() == 2
+-        if current_platform.is_device_capability_family(120):
++        if current_platform.is_device_capability_family(120) or (
++            current_platform.get_device_capability().major < 9  # sm8x patch: no native kernels
++        ):
+             # Native conv/mix kernels require Hopper or SM10x. Keep the
+             # loop executor's cache writes and residual rounding on SM12x.
+             short_conv(

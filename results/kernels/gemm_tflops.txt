@@ -1,0 +1,2 @@
+GPU0 NVIDIA GeForce RTX 3090: 91.4 TFLOPS bf16 (10 s sustained)
+GPU1 NVIDIA GeForce RTX 3090: 91.6 TFLOPS bf16 (10 s sustained)

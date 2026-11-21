@@ -1,0 +1,22 @@
+{
+ "sys_words": 700,
+ "user_words": 120,
+ "A_cold": {
+  "prompt": 13141,
+  "cached": 0,
+  "wall_s": 2.505,
+  "hit_delta": 0
+ },
+ "B_divergent": {
+  "prompt": 13149,
+  "cached": 12608,
+  "wall_s": 0.143,
+  "hit_delta": 12608
+ },
+ "C_divergent": {
+  "prompt": 13156,
+  "cached": 12608,
+  "wall_s": 0.148,
+  "hit_delta": 12608
+ }
+}

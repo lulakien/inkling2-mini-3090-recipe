@@ -1,0 +1,16 @@
+{
+ "gpu0": {
+  "seconds": 464,
+  "max_power_w": 280.09,
+  "mean_power_busy_w": 277.4,
+  "max_temp_c": 67.03,
+  "peak_vram_mib": 23444.0
+ },
+ "gpu1": {
+  "seconds": 464,
+  "max_power_w": 27.64,
+  "mean_power_busy_w": 27.0,
+  "max_temp_c": 31.62,
+  "peak_vram_mib": 4.0
+ }
+}

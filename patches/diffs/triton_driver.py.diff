@@ -1,0 +1,11 @@
+--- a/triton/backends/nvidia/driver.py
++++ b/triton/backends/nvidia/driver.py
+@@ -292,7 +292,7 @@
+         self.profile_scratch_size = metadata.profile_scratch_size
+         self.profile_scratch_align = metadata.profile_scratch_align
+         self.launch_cooperative_grid = metadata.launch_cooperative_grid
+-        self.launch_pdl = metadata.launch_pdl
++        self.launch_pdl = False  # sm8x patch: no programmatic dependent launch before sm_90
+ 
+     def __call__(self, gridX, gridY, gridZ, stream, function, kernel_metadata, launch_metadata, launch_enter_hook,
+                  launch_exit_hook, *args):

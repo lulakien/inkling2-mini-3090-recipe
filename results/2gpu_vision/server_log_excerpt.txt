@@ -1,0 +1,4 @@
+Encoder cache will be initialized with a budget of 2704 tokens, and profiled with 1 image items of the maximum feature size.
+Encoder cache can hold 2704 tokens of image embeddings across requests (0.01 GiB, taken from the KV cache).
+Available KV cache memory: 12.73 GiB
+GPU KV cache size: 283,866 tokens, Maximum concurrency for 262,144 tokens per request: 1.08x

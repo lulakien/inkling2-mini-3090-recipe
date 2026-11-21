@@ -1,0 +1,36 @@
+n=   64 E=128 BS=16 {}                                       OK
+n=   64 E=128 BS=32 {}                                       OK
+n=   64 E=128 BS=64 {}                                       OK
+n=  256 E=128 BS=16 {}                                       OK
+n=  256 E=128 BS=32 {}                                       OK
+n=  256 E=128 BS=64 {}                                       OK
+n=  512 E=128 BS=16 {}                                       OK
+n=  512 E=128 BS=32 {}                                       OK
+n=  512 E=128 BS=64 {}                                       OK
+n= 1024 E=128 BS=16 {}                                       OK
+n= 1024 E=128 BS=32 {}                                       OK
+n= 1024 E=128 BS=64 {}                                       OK
+n= 2048 E=128 BS=16 {}                                       OK
+n= 2048 E=128 BS=32 {}                                       OK
+n= 2048 E=128 BS=64 {}                                       OK
+n= 8192 E=128 BS=16 {}                                       OK
+n= 8192 E=128 BS=32 {}                                       OK
+n= 8192 E=128 BS=64 {}                                       OK
+n=16384 E=128 BS=16 {}                                       OK
+n=16384 E=128 BS=32 {}                                       OK
+n=16384 E=128 BS=64 {}                                       OK
+n= 8192 E=128 BS=16 {'use_map': True}                        OK
+n= 8192 E=128 BS=16 {'use_map': True, 'use_scatter': False}  OK
+n= 8192 E=128 BS=16 {'use_scatter': False}                   OK
+n= 4096 E=128 BS=16 {'invalid': 0.3}                         OK
+n= 8192 E=128 BS=16 {'invalid': 0.0}                         OK
+n= 8192 E= 64 BS=16 {}                                       OK
+n= 8192 E= 64 BS=16 {'use_map': True}                        OK
+n=   64 E=128 BS=16 {}                                       OK
+n=   64 E=128 BS=16 {'pad': True}                            OK
+n= 1024 E=256 BS=32 {}                                       OK
+ALL EXACT
+bit-identical in all 72 cases
+T=1024 Q=2 N_STACK=2: 3-pass   48.9 us  2-pass   37.0 us  (1.32x)
+T=1024 Q=1 N_STACK=4: 3-pass   79.6 us  2-pass   41.5 us  (1.92x)
+T=2048 Q=2 N_STACK=2: 3-pass   99.6 us  2-pass   67.2 us  (1.48x)

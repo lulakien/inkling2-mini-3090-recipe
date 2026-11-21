@@ -1,0 +1,83 @@
+--- a/vllm/models/inkling2/nvidia/loop.py
++++ b/vllm/models/inkling2/nvidia/loop.py
+@@ -19,6 +19,15 @@
+ 
+ from vllm.distributed import tensor_model_parallel_all_reduce
+ 
++import os as _os
++
++_cear_moe = None
++if _os.environ.get("VLLM_CEAR", "0") == "1":  # sm8x patch
++    import sys as _sys
++
++    _sys.path.insert(0, _os.environ.get("VLLM_HOST_ALLREDUCE_DIR", "/hostar"))
++    import cear_moe as _cear_moe
++
+ from ..configs import Inkling2ModelConfig
+ from ..quant_config import Inkling2QuantConfig
+ from .model import (
+@@ -63,6 +72,25 @@
+         return (1.0 - torch.tanh(forget)) * dest + torch.tanh(gain) * message
+ 
+ 
++def _use_skinny(x: torch.Tensor, w: torch.Tensor) -> bool:
++    from .ops.skinny_gemm import eligible
++
++    return (
++        x.dim() == 3
++        and x.shape[0] > 1  # single-stream bmm: cuBLAS is faster
++        and 2 <= x.shape[1]
++        and torch.cuda.get_device_capability(x.device)[0] < 9
++        and x.shape[0] == w.shape[0]
++        and eligible(x, w)
++    )
++
++
++def _skinny_gemm(x: torch.Tensor, w: torch.Tensor) -> torch.Tensor:
++    from .ops.skinny_gemm import skinny_gemm
++
++    return skinny_gemm(x, w)
++
++
+ class Inkling2LoopDecoderLayer(Inkling2DecoderLayer):
+     """A loop core layer: per-pass caches and a message controller per
+     stream (`LOOP_STREAMS`), whose weights are stacked over the streams."""
+@@ -121,7 +149,13 @@
+         broadcast over streams) and `message`, each output RMS-normalized
+         with its row of `norm_weight` `(S, D)`: bf16 `(S, T, D)`."""
+         pair = pair_rms_norm(dest, message)
+-        hidden = torch.bmm(pair, self.controller_down[streams].transpose(1, 2))
++        down = self.controller_down[streams]
++        # sm8x patch: cuBLAS runs this (S, T<=16, 4608) x (S, 64, 4608) bmm on 6 CTAs (~28 us); the
++        # split-K skinny kernel takes ~6 us. Same fp32 accumulation, different summation order.
++        if _use_skinny(pair, down):
++            hidden = _skinny_gemm(pair, down)
++        else:
++            hidden = torch.bmm(pair, down.transpose(1, 2))
+         gain_forget = torch.bmm(
+             hidden,
+             self.controller_gain_forget[streams].transpose(1, 2),
+@@ -174,6 +208,7 @@
+             (queries[:, 0], kv_queries[:, 0], kv_queries[:, 1], queries[:, 1]), 1
+         )
+         self.message_queries.copy_(stacked * self.hidden_size**-0.5)
++        super().process_weights_after_loading()  # sm8x patch: base-model hook (host embedding, EMBED_HOST=1)
+ 
+     def _make_layer(
+         self,
+@@ -306,8 +341,14 @@
+             )
+         else:
+             # The MoE output is all-reduced (in bf16) inside layer.mlp.
++            # sm8x patch: large (prefill) batches all-reduce row pieces on the copy engines while the next
++            # piece's experts compute (/hostar/cear_moe.py; VLLM_CEAR=1).
++            if _cear_moe is not None and _cear_moe.eligible(mlp_in[0]):
++                moe_out = _cear_moe.moe_pieced(layer.mlp, mlp_in[0], pass_idx)
++            else:
++                moe_out = layer.mlp(mlp_in[0], pass_idx=pass_idx)
+             outputs = layer.mlp_sconv.conv_mix(
+-                layer.mlp(mlp_in[0], pass_idx=pass_idx),
++                moe_out,
+                 *mix_args,
+                 addend=attn_out,
+                 residual=residual,

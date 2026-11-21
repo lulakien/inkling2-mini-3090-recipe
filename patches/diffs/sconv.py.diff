@@ -1,0 +1,19 @@
+--- a/vllm/models/inkling2/nvidia/sconv.py
++++ b/vllm/models/inkling2/nvidia/sconv.py
+@@ -104,6 +104,16 @@
+             4,
+         ):
+             return linear_k_groups(x.contiguous(), self.weight_proj, x.dtype)
++        # sm8x patch: cuBLAS takes ~13 us for this (T<=16, 2304) x (16, 2304) GEMM; skinny kernel ~4 us.
++        if (
++            2 <= x.shape[0] <= 16
++            and x.dim() == 2
++            and torch.cuda.get_device_capability(x.device)[0] < 9
++        ):
++            from .ops.skinny_gemm import eligible, skinny_gemm
++
++            if eligible(x, self.weight_proj):
++                return skinny_gemm(x, self.weight_proj)
+         return nn.functional.linear(x, self.weight_proj)
+ 
+     def forward(

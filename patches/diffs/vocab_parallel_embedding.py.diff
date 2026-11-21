@@ -1,0 +1,11 @@
+--- a/vllm/model_executor/layers/vocab_parallel_embedding.py
++++ b/vllm/model_executor/layers/vocab_parallel_embedding.py
+@@ -361,6 +361,8 @@
+             self.tp_size > 1
+             and current_platform.is_cuda()
+             and isinstance(quant_method, UnquantizedEmbeddingMethod)
++            # sm8x patch: _C vocab_parallel_embedding has no pre-sm_100 build here
++            and current_platform.get_device_capability().major >= 9
+         )
+ 
+         self.quant_method.create_weights(

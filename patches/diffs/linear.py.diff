@@ -1,0 +1,13 @@
+--- a/vllm/models/inkling2/nvidia/ops/linear.py
++++ b/vllm/models/inkling2/nvidia/ops/linear.py
+@@ -213,7 +213,9 @@
+     assert x.is_contiguous() and weight.is_contiguous()
+     tokens, hidden = x.shape
+     n = weight.shape[0]
+-    sm120 = current_platform.is_device_capability_family(120)
++    sm120 = current_platform.is_device_capability_family(120) or (
++        current_platform.get_device_capability().major < 9  # sm8x patch: no TMA
++    )
+     if tokens >= TMA_MIN_TOKENS and not sm120:
+         from triton.tools.tensor_descriptor import TensorDescriptor
+ 

@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# /etc/boot/hooks/post.d/95-gpu-unlock-entry  (installed by ~/ai/gpu-unlock/setup.sh)
+#
+# Keeps a "<kernel>-gpu-unlock" Limine entry in sync with the regular kernel entry. limine-mkinitcpio runs the
+# post.d hooks after every kernel/initramfs update (pacman kernel upgrades, DKMS rebuilds, mkinitcpio -P), with
+# the boot-partition mutex held -> all limine-entry-tool calls here use --no-mutex --no-hooks.
+# The entry boots the same kernel and initramfs as the normal entry (gpu_unlock is in every initramfs via
+# /etc/mkinitcpio.conf.d/zz-gpu-unlock.conf and does nothing without gpu_unlock.targets=), with the normal
+# cmdline + gpu_unlock.targets=<TARGETS> gpu_unlock.resume=0.  Settings: /etc/gpu-unlock-entry.conf
+# Exit codes 1-99 are non-fatal for the caller; this hook never blocks a kernel update.
+set -u
+[[ -f /etc/gpu-unlock-entry.conf ]] && . /etc/gpu-unlock-entry.conf
+KERNEL_PKG=${KERNEL_PKG:-linux-cachyos}
+TARGETS=${TARGETS:-0000:01:00.0,0000:02:00.0}
+NAME="${KERNEL_PKG}-gpu-unlock"
+ESP=${ESP:-/boot}
+DROPIN=/etc/limine-entry-tool.d/50-gpu-unlock.conf
+STAMP=/var/lib/gpu-unlock-entry.stamp
+log() { echo "gpu-unlock-entry: $*" >&2; }
+
+vmlinuz=$(pacman -Qlq "$KERNEL_PKG" 2>/dev/null | grep -m1 -E '^/usr/lib/modules/[^/]+/vmlinuz$') \
+  || { log "$KERNEL_PKG not installed; skipping"; exit 1; }
+kver=$(basename "$(dirname "$vmlinuz")")
+modinfo -k "$kver" gpu_unlock &>/dev/null || { log "no gpu_unlock module for $kver (DKMS?); skipping"; exit 1; }
+
+# The regular entry's initramfs, as installed by limine-mkinitcpio for this kernel.
+kdir="$ESP/$(cat /etc/machine-id)/$KERNEL_PKG"
+initramfs=""
+for f in "$kdir/initramfs" "$kdir/initramfs-$KERNEL_PKG" "$kdir/initramfs-$KERNEL_PKG.img"; do
+  [[ -f $f ]] && { initramfs=$f; break; }
+done
+if [[ -z $initramfs ]]; then  # any other non-fallback initramfs name
+  for f in "$kdir"/initramfs*; do [[ -f $f && $f != *fallback* ]] && { initramfs=$f; break; }; done
+fi
+[[ -n $initramfs ]] || { log "no initramfs in $kdir; skipping"; exit 1; }
+
+base=$(limine-entry-tool --get-cmdline "$KERNEL_PKG" --no-mutex --no-hooks 2>/dev/null | tail -n 1)
+base=$(sed -E 's/(^| )gpu_unlock\.[^ ]*//g; s/^ +//' <<<"$base")
+[[ -n $base ]] || { log "could not read the $KERNEL_PKG cmdline; skipping"; exit 1; }
+mkdir -p "${DROPIN%/*}"
+want="KERNEL_CMDLINE[$NAME]=$base gpu_unlock.targets=$TARGETS gpu_unlock.resume=0"
+[[ "$(cat "$DROPIN" 2>/dev/null)" == "$want" ]] || printf '%s\n' "$want" >"$DROPIN"
+
+# Skip the copy when nothing changed (post hooks also run on other limine-entry-tool operations).
+sum=$(cat "$vmlinuz" "$initramfs" "$DROPIN" | sha256sum | cut -d' ' -f1)
+if [[ "$(cat "$STAMP" 2>/dev/null)" == "$sum" ]] && grep -q -- "$NAME" "$ESP/limine.conf"; then
+  exit 0
+fi
+limine-entry-tool --add-kernel "$NAME" "$vmlinuz" "$initramfs" \
+  --comment "gpu_unlock.targets=$TARGETS, kernel $kver" --no-mutex --no-hooks --quiet \
+  || { log "limine-entry-tool --add-kernel failed"; exit 1; }
+echo "$sum" >"$STAMP"
+log "entry $NAME updated for kernel $kver"
+exit 0

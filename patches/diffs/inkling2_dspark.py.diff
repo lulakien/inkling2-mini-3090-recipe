@@ -1,0 +1,46 @@
+--- a/vllm/models/inkling2/nvidia/dspark.py
++++ b/vllm/models/inkling2/nvidia/dspark.py
+@@ -359,6 +359,17 @@
+             head = lm_head_weight[rows].double()
+             self.fold_weight[rows].copy_(head @ projection)
+             self.fold_bias[rows].copy_(head @ bias)
++        # sm8x patch: int8 copy of the folded head for the per-step bias GEMV (drafts only; refilled in place so
++        # CUDA graphs keep pointing at it). VLLM_INKLING_W8 contains "markov".
++        from .ops.w8_gemm import W8, quantize
++
++        if "markov" in W8:
++            q, sc = quantize(self.fold_weight)
++            if getattr(self, "_fold_w8", None) is None:
++                self._fold_w8 = (q, sc)
++            else:
++                self._fold_w8[0].copy_(q)
++                self._fold_w8[1].copy_(sc)
+ 
+     def context(self, hidden: torch.Tensor, f_rnn: torch.Tensor) -> torch.Tensor:
+         """fp32 `rnn_proj` bias plus its `[hidden, f_rnn]` term for the
+@@ -382,6 +393,11 @@
+         weight = self.rnn_proj.weight[:, : 2 * self.markov_rank]
+         raw = torch.addmm(context, inputs, weight.T, out_dtype=torch.float32)
+         state, latent = markov_gate(raw, state)
++        w8 = getattr(self, "_fold_w8", None)
++        if w8 is not None and latent.dtype == torch.bfloat16 and latent.shape[0] <= 64:
++            from .ops.w8_gemm import w8_gemm
++
++            return state, w8_gemm(latent.contiguous(), w8[0], w8[1], bias=self.fold_bias)
+         return state, torch.addmm(self.fold_bias, latent, self.fold_weight.T)
+ 
+ 
+@@ -544,6 +560,13 @@
+     def compute_base_logits(self, hidden_states: torch.Tensor) -> torch.Tensor:
+         """TP-local bf16 base logits (bf16 GEMM, as the reference)."""
+         assert self.lm_head is not None
++        # sm8x patch: the int8 copy of the (shared) target LM head (VLLM_INKLING_W8 contains "head").
++        from .ops.w8_gemm import W8, get_w8, w8_linear
++
++        if "head" in W8:
++            w8 = get_w8(self.lm_head)
++            if w8 is not None:
++                return w8_linear(hidden_states, w8)
+         return linear(hidden_states, self.lm_head.weight)
+ 
+     def markov_step(

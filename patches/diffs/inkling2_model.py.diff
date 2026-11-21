@@ -1,0 +1,54 @@
+--- a/vllm/models/inkling2/nvidia/model.py
++++ b/vllm/models/inkling2/nvidia/model.py
+@@ -81,7 +81,27 @@
+ class Inkling2LogitsProcessor(LogitsProcessor):
+     """Use the low-M projection while preserving vocab gathering and softcaps."""
+ 
++    def forward(self, lm_head, hidden_states, embedding_bias=None, skip_gather=False):
++        # sm8x patch: the same softcap ops in place (bit-identical), so a 512-row prompt-logprob chunk holds one
++        # [rows, vocab] fp32 buffer instead of two (the KV cache is sized after warmup's peak).
++        if self.logits_as_input:
++            return super().forward(lm_head, hidden_states, embedding_bias, skip_gather)
++        logits = self._get_logits(hidden_states, lm_head, embedding_bias, skip_gather)
++        if logits is not None:
++            if self.soft_cap is not None:
++                logits.div_(self.soft_cap).tanh_().mul_(self.soft_cap)
++            if self.scale != 1.0:
++                logits *= self.scale
++        return logits
++
+     def _apply_head(self, lm_head, hidden_states, embedding_bias):
++        # sm8x patch: int8 LM head (VLLM_INKLING_W8 contains "head"); fp32 logits as the bf16 head.
++        from .ops.w8_gemm import W8, get_w8, w8_linear
++
++        if "head" in W8 and embedding_bias is None:
++            w8 = get_w8(lm_head)
++            if w8 is not None:
++                return w8_linear(hidden_states, w8, out_dtype=self.head_dtype)
+         from vllm.model_executor.layers.linear import UnquantizedLinearMethod
+         from vllm.model_executor.layers.vocab_parallel_embedding import (
+             UnquantizedEmbeddingMethod,
+@@ -303,6 +323,23 @@
+     def embed_input_ids(self, input_ids: torch.Tensor) -> torch.Tensor:
+         return self.embed_norm(self.embed_tokens(input_ids))
+ 
++    def process_weights_after_loading(self) -> None:
++        # sm8x patch: VLLM_INKLING_EMBED_HOST=1 moves the input embedding table (0.86 GiB bf16, shared with the
++        # drafter) to pinned host memory, read in place over PCIe through a UVA device view: a step gathers only
++        # its tokens' rows (a 1024-token prefill chunk = 4.7 MB), so the freed VRAM goes to the KV cache.
++        import os
++
++        if os.environ.get("VLLM_INKLING_EMBED_HOST") != "1":
++            return
++        from vllm.utils.torch_utils import get_accelerator_view_from_cpu_tensor
++
++        w = self.embed_tokens.weight
++        host = torch.empty(w.shape, dtype=w.dtype, device="cpu", pin_memory=True)
++        host.copy_(w)
++        self._embed_host = host  # owns the pinned pages behind the view
++        w.data = get_accelerator_view_from_cpu_tensor(host)
++        torch.cuda.empty_cache()
++
+     def _mix(
+         self,
+         stack: torch.Tensor,

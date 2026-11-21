@@ -1,0 +1,116 @@
+--- a/vllm/models/inkling2/nvidia/ops/attn_res.py
++++ b/vllm/models/inkling2/nvidia/ops/attn_res.py
+@@ -10,6 +10,8 @@
+ returned as is (fp32) without a norm weight.
+ """
+ 
++import os
++
+ import torch
+ 
+ from vllm.models.inkling2.nvidia.ops.norm import rsqrt
+@@ -168,6 +170,94 @@
+ 
+ 
+ @triton.jit
++def _attn_res_2pass_kernel(
++    Stack,
++    Last,
++    Addend,
++    Queries,
++    NormW,
++    Out,
++    stride_s,
++    T,
++    eps,
++    norm_eps,
++    D: tl.constexpr,
++    N_STACK: tl.constexpr,
++    HAS_ADDEND: tl.constexpr,
++    NORMALIZE: tl.constexpr,
++    APPLY_NORM: tl.constexpr,
++    BLOCK_N: tl.constexpr,
++    BLOCK_D: tl.constexpr,
++):
++    """Prefill variant (sm8x): the three BLOCK_D chunks of a row are mixed once and kept in registers, so the
++    sources are read twice instead of three times (the row kernel's trick, at prefill block sizes). The
++    arithmetic order is the one of `_attn_res_kernel` (pass 1 vector fma over chunks, then a single sum;
++    pass 2 scalar `sum_sq` in chunk order), so the output is bit-identical. D must be 3 * BLOCK_D with the
++    last chunk masked (D=2304, BLOCK_D=1024); the wrapper only selects it for that shape."""
++    tl.extra.cuda.gdc_wait()
++    t = tl.program_id(1).to(tl.int64)
++    q_off = tl.program_id(0) * D
++    row_off = t * D
++    n_idx = tl.arange(0, BLOCK_N)
++    d = tl.arange(0, BLOCK_D)
++    o0 = d
++    o1 = BLOCK_D + d
++    o2 = 2 * BLOCK_D + d
++    m0 = o0 < D
++    m1 = o1 < D
++    m2 = o2 < D
++
++    # Pass 1: per-source inverse RMS and query dot products, in one vector fma per chunk (same order as
++    # the looped kernel: sum_sq/dots accumulate column-wise across chunks, then one tl.sum).
++    logits = tl.full((BLOCK_N,), float("-inf"), tl.float32)
++    inv_rms = tl.zeros((BLOCK_N,), tl.float32)
++    for n in tl.static_range(N_STACK + 1):
++        sq = tl.zeros((BLOCK_D,), tl.float32)
++        dots = tl.zeros((BLOCK_D,), tl.float32)
++        x = _load_source(Stack, stride_s, Last, Addend, row_off, o0, m0, n, N_STACK, HAS_ADDEND)
++        q = tl.load(Queries + q_off + o0, m0, other=0)
++        sq = tl.fma(x, x, sq)
++        dots = tl.fma(q, x, dots)
++        x = _load_source(Stack, stride_s, Last, Addend, row_off, o1, m1, n, N_STACK, HAS_ADDEND)
++        q = tl.load(Queries + q_off + o1, m1, other=0)
++        sq = tl.fma(x, x, sq)
++        dots = tl.fma(q, x, dots)
++        x = _load_source(Stack, stride_s, Last, Addend, row_off, o2, m2, n, N_STACK, HAS_ADDEND)
++        q = tl.load(Queries + q_off + o2, m2, other=0)
++        sq = tl.fma(x, x, sq)
++        dots = tl.fma(q, x, dots)
++        rstd = rsqrt(tl.fma(tl.sum(sq), 1.0 / D, eps))
++        inv_rms = tl.where(n_idx == n, rstd, inv_rms)
++        logits = tl.where(n_idx == n, tl.sum(dots) * rstd, logits)
++
++    probs = tldevice.exp(logits - tl.max(logits))
++    inv_sum = tl.div_rn(1.0, tl.sum(probs))
++    if NORMALIZE:
++        probs = probs * inv_rms
++
++    # Pass 2: the mix for every chunk, kept in registers; the RMS scalar accumulates in chunk order.
++    a0 = _mix(Stack, stride_s, Last, Addend, row_off, o0, m0, probs, n_idx, N_STACK, HAS_ADDEND, BLOCK_D) * inv_sum
++    a1 = _mix(Stack, stride_s, Last, Addend, row_off, o1, m1, probs, n_idx, N_STACK, HAS_ADDEND, BLOCK_D) * inv_sum
++    a2 = _mix(Stack, stride_s, Last, Addend, row_off, o2, m2, probs, n_idx, N_STACK, HAS_ADDEND, BLOCK_D) * inv_sum
++    out = Out + tl.program_id(0).to(tl.int64) * T * D + row_off
++    if APPLY_NORM:
++        sum_sq = tl.sum(a0 * a0)
++        sum_sq += tl.sum(a1 * a1)
++        sum_sq += tl.sum(a2 * a2)
++        out_rstd = rsqrt(tl.div_rn(sum_sq, D) + norm_eps)
++        w0 = tl.load(NormW + q_off + o0, m0, other=0).to(tl.float32)
++        tl.store(out + o0, (a0 * out_rstd * w0).to(Out.dtype.element_ty), m0)
++        w1 = tl.load(NormW + q_off + o1, m1, other=0).to(tl.float32)
++        tl.store(out + o1, (a1 * out_rstd * w1).to(Out.dtype.element_ty), m1)
++        w2 = tl.load(NormW + q_off + o2, m2, other=0).to(tl.float32)
++        tl.store(out + o2, (a2 * out_rstd * w2).to(Out.dtype.element_ty), m2)
++    else:
++        tl.store(out + o0, a0.to(Out.dtype.element_ty), m0)
++        tl.store(out + o1, a1.to(Out.dtype.element_ty), m1)
++        tl.store(out + o2, a2.to(Out.dtype.element_ty), m2)
++
++
++@triton.jit
+ def _attn_res_row_kernel(
+     Stack,
+     Last,
+@@ -301,6 +391,9 @@
+         _attn_res_row_kernel[grid](
+             *args, **meta, BLOCK_A=block_a, BLOCK_B=block_b, num_warps=8
+         )
++    elif d == 2304 and os.environ.get("VLLM_ATTN_RES_2PASS", "1") == "1":
++        # sm8x: sources read twice instead of three times (bit-identical arithmetic order).
++        _attn_res_2pass_kernel[grid](*args, **meta, BLOCK_D=1024, num_warps=4)
+     else:
+         _attn_res_kernel[grid](*args, **meta, BLOCK_D=1024, num_warps=4)
+     return out

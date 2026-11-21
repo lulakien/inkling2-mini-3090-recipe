@@ -1,0 +1,128 @@
+--- a/vllm/distributed/device_communicators/cuda_communicator.py
++++ b/vllm/distributed/device_communicators/cuda_communicator.py
+@@ -2,6 +2,8 @@
+ # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+ 
++import os
++
+ import torch
+ from torch.distributed import ProcessGroup
+ 
+@@ -27,6 +29,59 @@
+ 
+ logger = init_logger(__name__)
+ 
++
++def _init_host_allreduce(cpu_group, ranks, rank_in_group, device, cap=None, blocks=None, what="all-reduce"):
++    """sm8x patch: set up the TP2 host-memory all-reduce / all-gather (/hostar/hostar.py)."""
++    import sys
++    import uuid
++
++    import torch.distributed as dist
++
++    sys.path.insert(0, os.environ.get("VLLM_HOST_ALLREDUCE_DIR", "/hostar"))
++    from hostar import HostAllReduce, create_shm
++
++    if cap is None:
++        cap = int(os.environ.get("VLLM_HOST_ALLREDUCE_MAX_BYTES", str(16 * 8192 * 2)))
++    if blocks is None:
++        blocks = int(os.environ.get("VLLM_HOST_ALLREDUCE_BLOCKS", "4"))
++    name = [f"vllm_hostar_{uuid.uuid4().hex[:12]}" if rank_in_group == 0 else None]
++    dist.broadcast_object_list(name, src=ranks[0], group=cpu_group)
++    if rank_in_group == 0:
++        create_shm(name[0], cap)
++    dist.barrier(group=cpu_group)
++    torch.cuda.set_device(device)
++    har = HostAllReduce(name[0], rank_in_group, cap, device, blocks=blocks)
++    dist.barrier(group=cpu_group)
++    if rank_in_group == 0:
++        os.unlink(f"/dev/shm/{name[0]}")
++    logger.info("Host-memory TP2 %s enabled (max %d bytes, %d CTAs)", what, cap, blocks)
++    return har
++
++def _init_cear(cpu_group, ranks, rank_in_group, device):
++    """sm8x patch: copy-engine TP2 all-reduce for prefill pieces (/hostar/cear.py)."""
++    import sys
++    import uuid
++
++    import torch.distributed as dist
++
++    sys.path.insert(0, os.environ.get("VLLM_HOST_ALLREDUCE_DIR", "/hostar"))
++    from cear import CopyEngineAllReduce, create_shm
++
++    cap = int(os.environ.get("VLLM_CEAR_MAX_BYTES", str(24 << 20)))
++    name = [f"vllm_cear_{uuid.uuid4().hex[:12]}" if rank_in_group == 0 else None]
++    dist.broadcast_object_list(name, src=ranks[0], group=cpu_group)
++    if rank_in_group == 0:
++        create_shm(name[0], cap)
++    dist.barrier(group=cpu_group)
++    torch.cuda.set_device(device)
++    ce = CopyEngineAllReduce(name[0], rank_in_group, cap, device)
++    dist.barrier(group=cpu_group)
++    if rank_in_group == 0:
++        os.unlink(f"/dev/shm/{name[0]}")
++    logger.info("Copy-engine TP2 all-reduce for prefill MoE pieces enabled (max %d bytes)", cap)
++    return ce
++
++
+ # Since NCCL 2.29.2, ncclSymkPickKernel accepts registered input with
+ # non-registered output for ReduceScatter (ncclSymSendRegRecvNonreg).
+ NCCL_DIRECT_SYMM_RS_OUTPUT_MIN_VERSION = 22902
+@@ -210,6 +265,31 @@
+         if self.world_size > 1:
+             self._log_all_reduce_backend_selection()
+ 
++        # sm8x patch (port of ~/ai/bench/hostar from the Qwen work): TP2 all-reduce through mapped pinned host
++        # memory for GPUs without P2P (RTX 3090). Small (decode / spec-verify) tensors only; bit-identical to
++        # NCCL's two-rank sum. Opt-in: VLLM_HOST_ALLREDUCE=1.
++        self.host_ar = None
++        self.host_ag = None
++        self.cear = None
++        if (
++            os.environ.get("VLLM_HOST_ALLREDUCE", "0") == "1"
++            and unique_name.split(":")[0] == "tp"
++            and self.world_size == 2
++        ):
++            self.host_ar = _init_host_allreduce(
++                self.cpu_group, self.ranks, self.rank_in_group, self.device
++            )
++            # Same mechanism for all-gathers (DSpark draft logits 7x/step, verify logits fp32): separate
++            # buffer/counters. Byte copy, so bit-identical to NCCL. VLLM_HOST_ALLGATHER_MAX_BYTES=0 disables.
++            if os.environ.get("VLLM_CEAR", "0") == "1":
++                self.cear = _init_cear(self.cpu_group, self.ranks, self.rank_in_group, self.device)
++            ag_cap = int(os.environ.get("VLLM_HOST_ALLGATHER_MAX_BYTES", str(512 << 10)))
++            if ag_cap > 0:
++                self.host_ag = _init_host_allreduce(
++                    self.cpu_group, self.ranks, self.rank_in_group, self.device, cap=ag_cap,
++                    blocks=int(os.environ.get("VLLM_HOST_ALLGATHER_BLOCKS", "4")), what="all-gather",
++                )
++
+         if self.use_all2all:
+             if self.all2all_backend in ("naive", "allgather_reducescatter"):
+                 from .all2all import AgRsAll2AllManager
+@@ -387,6 +467,9 @@
+         )
+ 
+     def all_reduce(self, input_):
++        host_ar = getattr(self, "host_ar", None)
++        if host_ar is not None and host_ar.eligible(input_):
++            return host_ar.all_reduce(input_)
+         fi_ar_comm = self.fi_ar_comm
+         use_fi_ar = (
+             fi_ar_comm is not None
+@@ -491,6 +574,14 @@
+         # gather-before-GEMM uses dim=0 with tp-aligned (uniform) shards.
+         if dim < 0:
+             dim += input_.dim()
++        host_ag = getattr(self, "host_ag", None)
++        if host_ag is not None and host_ag.eligible_gather(input_.contiguous()):
++            input_size = input_.size()
++            out = host_ag.all_gather(input_.contiguous())
++            out = out.reshape((self.world_size,) + input_size).movedim(0, dim)
++            return out.reshape(
++                input_size[:dim] + (self.world_size * input_size[dim],) + input_size[dim + 1 :]
++            )
+         if dim == 0 and should_nccl_symm_mem_ag_rs():
+             return self._all_gather_symm_mem(input_.contiguous())
+ 

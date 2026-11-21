@@ -1,0 +1,38 @@
+--- a/vllm/v1/attention/backends/fa_utils.py
++++ b/vllm/v1/attention/backends/fa_utils.py
+@@ -5,6 +5,8 @@
+ 
+ import vllm.envs as envs
+ from vllm.logger import init_logger
++import torch
++
+ from vllm.platforms import current_platform
+ 
+ logger = init_logger(__name__)
+@@ -16,7 +18,25 @@
+ _ROCM_FLASH_ATTN_AVAILABLE = False
+ 
+ if current_platform.is_cuda():
+-    from vllm._custom_ops import reshape_and_cache_flash
++    from vllm._custom_ops import reshape_and_cache_flash as _native_reshape_and_cache_flash
++
++    # sm8x patch: _C_cache_ops.reshape_and_cache_flash is built for sm_100 only in this image;
++    # on Ampere its launch fails silently and the KV is never written. Portable strided write,
++    # CUDA-graph safe. Padding slots (-1) rewrite block 0, vLLM's reserved null block.
++    def reshape_and_cache_flash(key, value, key_cache, value_cache, slot_mapping,
++                                kv_cache_dtype, k_scale, v_scale):
++        if torch.cuda.get_device_capability(key.device)[0] >= 9:
++            return _native_reshape_and_cache_flash(key, value, key_cache, value_cache,
++                                                   slot_mapping, kv_cache_dtype, k_scale, v_scale)
++        assert kv_cache_dtype in ("auto", "bfloat16", "float16"), kv_cache_dtype
++        n = slot_mapping.shape[0]
++        slots = slot_mapping.to(torch.int64)
++        valid = (slots >= 0).view(-1, 1, 1)
++        safe = torch.where(slots >= 0, slots, 0)
++        block_size = key_cache.shape[1]
++        blk, off = safe // block_size, safe % block_size
++        for src, cache in ((key, key_cache), (value, value_cache)):
++            cache[blk, off] = torch.where(valid, src[:n].to(cache.dtype), cache[blk, off])
+     from vllm.vllm_flash_attn import (  # type: ignore[attr-defined]
+         compile_flash_attn_varlen_func_from_specs,
+         flash_attn_varlen_func,

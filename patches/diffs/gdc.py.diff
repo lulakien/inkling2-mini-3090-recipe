@@ -1,0 +1,18 @@
+--- a/triton/language/extra/cuda/gdc.py
++++ b/triton/language/extra/cuda/gdc.py
+@@ -20,7 +20,7 @@
+ 
+     See https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-griddepcontrol for more details.
+     """
+-    core.inline_asm_elementwise("griddepcontrol.wait; // dummy $0", "=r", [], dtype=core.int32, is_pure=False, pack=1,
++    core.inline_asm_elementwise("mov.u32 $0, 0; // sm8x patch: griddepcontrol.wait is sm_90+, no-op without PDL", "=r", [], dtype=core.int32, is_pure=False, pack=1,
+                                 _semantic=_semantic)
+ 
+ 
+@@ -38,5 +38,5 @@
+ 
+     See https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-griddepcontrol for more details.
+     """
+-    core.inline_asm_elementwise("griddepcontrol.launch_dependents; // dummy $0", "=r", [], dtype=core.int32,
++    core.inline_asm_elementwise("mov.u32 $0, 0; // sm8x patch: griddepcontrol.launch_dependents is sm_90+", "=r", [], dtype=core.int32,
+                                 is_pure=False, pack=1, _semantic=_semantic)

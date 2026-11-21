@@ -1,0 +1,14 @@
+--- a/vllm/v1/worker/gpu/sample/prompt_logprob.py
++++ b/vllm/v1/worker/gpu/sample/prompt_logprob.py
+@@ -17,7 +17,10 @@
+     compute_topk_scores,
+ )
+ 
+-CHUNK_SIZE = 1024
++import os as _os
++# sm8x patch: rows of full-vocab fp32 logits per prompt-logprob chunk; the KV cache is sized after a warmup that
++# measures this peak (1024 rows = 0.8 GiB with the 201K vocab), so single-GPU runs set it lower.
++CHUNK_SIZE = int(_os.environ.get("VLLM_PROMPT_LOGPROB_CHUNK", "1024"))
+ # Cap rows x k per torch.topk call, whose workspace grows with both (~5.5 GiB
+ # for 1024 rows at a 152k vocab). Only splits chunks when k is very large.
+ TOPK_MAX_ELEMENTS = 64 << 20
