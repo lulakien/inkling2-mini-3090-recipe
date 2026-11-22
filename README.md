@@ -11,6 +11,14 @@ makes it fast there. It also has the launchers, the tests behind every number be
 
 ## Results
 
+<p>
+<img src="docs/img/localmaxxing-2gpu.png" width="49%" alt="LocalMaxxing: 2x RTX 3090, 313 tok/s">
+<img src="docs/img/localmaxxing-1gpu.png" width="49%" alt="LocalMaxxing: 1x RTX 3090, 242 tok/s">
+</p>
+
+Submitted to [LocalMaxxing](https://www.localmaxxing.com/en/models/thinkingmachines/Inkling-2-Mini). Its VRAM field
+is the sum across GPUs (the 2-GPU card's 41.8 GB should read 40.8 GiB).
+
 Same machine and checkpoint for every column. Batch 1 unless noted. Temp 0, reasoning effort "low" for decode.
 
 | | 2 GPUs (`launch/2gpu.sh`) | 1 GPU, 64K (`launch/1gpu.sh`) | 1 GPU, 128K (`PROFILE=128k`) |
