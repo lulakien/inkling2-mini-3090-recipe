@@ -1,0 +1,80 @@
+{
+ "chat": {
+  "pass": true,
+  "evidence": "Paris",
+  "seconds": 0.16
+ },
+ "stream": {
+  "pass": true,
+  "evidence": {
+   "chunks": 52,
+   "reasoning_chars": 398,
+   "content": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20",
+   "completion_tokens": 215
+  },
+  "seconds": 0.71
+ },
+ "reasoning_split": {
+  "pass": true,
+  "evidence": {
+   "reasoning_chars": 499,
+   "content": "**The trip lasts 2 hours and 35 minutes.**\n\nHere's the breakdown:\n- From 14:35 to 16:35 = 2 hours\n- From 16:35 to 17:10 "
+  },
+  "seconds": 0.89
+ },
+ "tool_call": {
+  "pass": true,
+  "evidence": {
+   "call": {
+    "name": "get_weather",
+    "arguments": "{\"city\":\"Istanbul\",\"unit\":\"celsius\"}"
+   },
+   "finish": "tool_calls",
+   "answer": "Istanbul is currently 18\u00b0C and cloudy."
+  },
+  "seconds": 0.78
+ },
+ "json_schema": {
+  "pass": true,
+  "evidence": {
+   "name": "Python",
+   "year": 1991,
+   "languages": [
+    "ABC",
+    "Modula-3"
+   ]
+  },
+  "seconds": 1.83
+ },
+ "completions_logprobs": {
+  "pass": true,
+  "evidence": {
+   "text": " jumps over the lazy dog.\n\n",
+   "lp0": -0.2413162887096405
+  },
+  "seconds": 0.24
+ },
+ "prefix_cache_hit": {
+  "pass": true,
+  "evidence": {
+   "prompt_tokens": 6619,
+   "cached_tokens": 6592,
+   "cold_s": 0.907,
+   "warm_s": 0.077
+  },
+  "seconds": 0.98
+ },
+ "temp0_determinism": {
+  "pass": true,
+  "evidence": {
+   "identical_runs": 3,
+   "sample": "Silicon fields hum  \na million cores crunch the light  \npixels bloom in flight  "
+  },
+  "seconds": 8.38
+ },
+ "stop_sequence": {
+  "pass": true,
+  "evidence": "1\n2\n3\n4",
+  "seconds": 0.38
+ }
+}

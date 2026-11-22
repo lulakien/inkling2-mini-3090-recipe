@@ -49,6 +49,10 @@ run, with every speed switch off):
 | prefill 16K / 254K | 6,290 tok/s / 69.5 s | 7,140 tok/s / 59.4 s (+13.5% / -15%) |
 | MMLU | 908 | 911 |
 
+**350 W instead of 280 W** (2 GPUs, `results/2gpu_350w`; short run, decode and prefill only): decode
+323 / 170 / 129 tok/s (+3%), prefill 2K / 16K / 64K 7,840 / 7,480 / 6,620 tok/s (+5%), cards at ~339 W,
+peak 75 C. Not worth the extra heat for daily use here, so the published numbers stay at 280 W.
+
 Serving many users at once? Speculation stops paying off at about 4 concurrent streams. With `SPEC=0` (2 GPUs):
 single stream 130 tok/s, and 2 / 4 / 8 streams give 207 / 348 / **557** tok/s total, versus 260 / 339 / 445 with
 speculation on.
@@ -189,7 +193,7 @@ first.
   prefix. With many distinct long prefixes, use `EXTRA="--prefix-cache-retention-interval 2048"`.
 - **MMLU here is a 1,140-question subset** scored by letter logits. It is a regression gate, not a reproduction of the
   model card.
-- Numbers are at a 280 W cap with gpu-unlock. Prefill is power-limited: 350 W gives more, decode stays the same.
+- Numbers are at a 280 W cap with gpu-unlock. 350 W measured: +5% prefill, +3% decode (see Results).
   2-GPU prefill is also limited by PCIe x8/x8 all-reduces.
 - **The first boot compiles kernels (~2 min).** They are cached in `~/.cache/inkling2-vllm` (`CACHE_DIR`). Delete it
   after changing patches.
