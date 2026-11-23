@@ -1,0 +1,35 @@
+--- a/vllm/models/inkling2/nvidia/ops/sconv.py
++++ b/vllm/models/inkling2/nvidia/ops/sconv.py
+@@ -27,7 +27,9 @@
+ from vllm.models.inkling2.nvidia.ops.norm import qr_clip_rel_tokens, rsqrt
+ from vllm.triton_utils import tl, triton
+ 
++from .e4m3 import e4m3_encode
+ 
++
+ @triton.jit
+ def _cached_taps(
+     cache_ptr,
+@@ -260,7 +262,8 @@
+         + (safe_slot % N)[:, None] * stride_c_n
+         + cache_col[None, :]
+     )
+-    tl.store(dst, cur, mask=tc_mask & valid[:, None])
++    # sm8x recipe patch: block 0 is the null block (VLLM_SCONV_TAIL maps tokens below a step's tail there).
++    tl.store(dst, cur, mask=tc_mask & (slot >= N)[:, None])
+ 
+     tap_args = (
+         x_ptr,
+@@ -810,7 +813,11 @@
+         + head * stride_kv_h
+         + d_idx[None, :]
+     )
+-    tl.store(dst, y.to(cache.dtype.element_ty), mask=(kv_slot >= 0)[:, None])
++    if cache.dtype.element_ty == tl.uint8:
++        # sm8x recipe patch: unit-scale E4M3 KV encoded in software (patches/e4m3.py, bit-exact vs torch/cvt)
++        tl.store(dst, e4m3_encode(y), mask=(kv_slot >= 0)[:, None])
++    else:
++        tl.store(dst, y.to(cache.dtype.element_ty), mask=(kv_slot >= 0)[:, None])
+ 
+ 
+ # From this many tokens, q/r run in their own launch (8 tokens per program)

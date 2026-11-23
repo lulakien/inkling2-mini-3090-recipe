@@ -1,0 +1,13 @@
+--- a/vllm/models/inkling/nvidia/ops/sconv.py
++++ b/vllm/models/inkling/nvidia/ops/sconv.py
+@@ -247,7 +247,9 @@
+     tl.store(seq_idx_ptr + offs, tl.where(actual, lo, 0), mask=padded)
+     tl.store(
+         query_start_ptr + offs,
+-        tl.where(actual, query_start, 0),
++        # sm8x recipe patch (HyperInkling): padding rows start past every request so the >256-token tile skip
++        # keeps the cache taps of a tile that mixes real and padding rows.
++        tl.where(actual, query_start, num_actual_tokens),
+         mask=padded,
+     )
+ 

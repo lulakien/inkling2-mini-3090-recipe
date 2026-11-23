@@ -20,6 +20,8 @@
 #   ATTN_RES_2PASS=0  stock 3-pass attn_res prefill kernel                            [1]
 #   EMBED_HOST=1      input embedding table in pinned host memory (1-GPU profiles)    [0]
 #   KV_MARGIN_MB, PLP_CHUNK  KV margin floor / prompt-logprob chunk (1-GPU profiles)  [1024 MiB / 1024]
+#   KV_DTYPE=fp8 unit-scale E4M3 KV, converted in software on sm_86 (half the KV bytes)  [bfloat16]
+#   SCONV_TAIL=1 short-conv state cache backs only each step's tail (frees KV; see docs/NOTES.md) [0]
 #   ASYNC=0     --no-async-scheduling (frees sliding/conv in-flight reserve, 1-GPU)   [1]
 #   MM=1        keep the vision tower (untested beyond a smoke test, see README)      [0]
 #   EAGER=1     no CUDA graphs (debugging)                                            [0]
@@ -40,12 +42,14 @@ PY=/usr/local/lib/python3.14/dist-packages
 VM=$PY/vllm/models/inkling2; TR=$PY/triton; VF=$PY/vllm/model_executor/layers/fused_moe
 VL=$PY/vllm/model_executor/layers; VB=$PY/vllm/v1/attention/backends; VD=$PY/vllm/distributed/device_communicators
 
+# FP8 KV doubles the attention block (128 tokens per page), and the retention interval must be a multiple of it
+PREFIX_RET=${PREFIX_RET:-$(case "${KV_DTYPE:-bfloat16}" in fp8*) echo 128;; *) echo 64;; esac)}
 ARGS=(/model --served-model-name "$SERVED_NAME" --tensor-parallel-size "$TP"
-  --max-model-len "${MAXLEN:-262144}" --max-num-seqs "${MAXSEQS:-8}" --kv-cache-dtype bfloat16
+  --max-model-len "${MAXLEN:-262144}" --max-num-seqs "${MAXSEQS:-8}" --kv-cache-dtype "${KV_DTYPE:-bfloat16}"
   --gpu-memory-utilization "${GMU:-0.97}"
   --reasoning-parser inkling --tool-call-parser inkling --enable-auto-tool-choice
   --compilation-config "{\"max_cudagraph_capture_size\": ${CG_MAX:-64}}"
-  --prefix-cache-retention-interval 64 --enable-prompt-tokens-details)
+  --prefix-cache-retention-interval "$PREFIX_RET" --enable-prompt-tokens-details)
 [ "$TP" = 2 ] && ARGS+=(--enable-batch-sharded-sampling)
 [ -n "${MNBT:-}" ] && ARGS+=(--max-num-batched-tokens "$MNBT")
 [ "${ASYNC:-1}" = 0 ] && ARGS+=(--no-async-scheduling)
@@ -64,6 +68,10 @@ docker run -d --name "$NAME" --gpus "${GPUS:-all}" --ipc=host \
   -v $P/linear.py:$VM/nvidia/ops/linear.py:ro \
   -v $P/attn_res.py:$VM/nvidia/ops/attn_res.py:ro \
   -v $P/skinny_gemm.py:$VM/nvidia/ops/skinny_gemm.py:ro \
+  -v $P/sconv_ops.py:$VM/nvidia/ops/sconv.py:ro \
+  -v $P/attention_sm90.py:$VM/nvidia/ops/attention_sm90.py:ro -v $P/e4m3.py:$VM/nvidia/ops/e4m3.py:ro \
+  -v $P/sconv_swa_attn.py:$PY/vllm/models/inkling/nvidia/sconv_swa_attn.py:ro \
+  -v $P/inkling_sconv_ops.py:$PY/vllm/models/inkling/nvidia/ops/sconv.py:ro \
   -v $P/w8_gemm.py:$VM/nvidia/ops/w8_gemm.py:ro \
   -v $P/loop.py:$VM/nvidia/loop.py:ro -v $P/sconv.py:$VM/nvidia/sconv.py:ro \
   -v $P/inkling2_attention.py:$VM/nvidia/attention.py:ro \
@@ -82,7 +90,7 @@ docker run -d --name "$NAME" --gpus "${GPUS:-all}" --ipc=host \
   -e VLLM_HOST_ALLREDUCE="${HOSTAR:-1}" -e HOSTAR_BUILD_DIR=/root/.cache/hostar-build \
   -e VLLM_CEAR="$CEAR" -e VLLM_CEAR_TAIL="$CEAR" -e VLLM_CEAR_TAIL_STAGE=2 \
   -e VLLM_ATTN_SPLITK="${ATTN_SPLITK:-5}" -e VLLM_ALIGN_MODE="${ALIGN_MODE:-auto}" \
-  -e VLLM_ATTN_RES_2PASS="${ATTN_RES_2PASS:-1}" -e VLLM_INKLING_EMBED_HOST="${EMBED_HOST:-0}" \
+  -e VLLM_ATTN_RES_2PASS="${ATTN_RES_2PASS:-1}" -e VLLM_SCONV_TAIL="${SCONV_TAIL:-0}" -e VLLM_INKLING_EMBED_HOST="${EMBED_HOST:-0}" \
   -e VLLM_PROMPT_LOGPROB_CHUNK="${PLP_CHUNK:-1024}" ${KV_MARGIN_MB:+-e VLLM_KV_MARGIN_FLOOR_MB=$KV_MARGIN_MB} \
   -e TORCHINDUCTOR_CACHE_DIR=/root/.cache/inductor -e TRITON_CACHE_DIR=/root/.cache/triton \
   ${DOCKER_EXTRA:-} -p 127.0.0.1:$PORT:8000 "$IMAGE" "${ARGS[@]}" ${EXTRA:-} >/dev/null

@@ -38,7 +38,7 @@
  from vllm.utils.torch_utils import (
      canonicalize_singleton_dim_strides,
      kv_cache_dtype_str_to_dtype,
-@@ -53,16 +67,88 @@
+@@ -53,17 +67,89 @@
  from .ops import use_sm100_kernels
  from .ops.attention import (
      _INKLING2_FA4_REL_ATTENTION_KERNEL,
@@ -56,7 +56,7 @@
  from .sconv import K_STREAM, V_STREAM, Inkling2ShortConv, conv_metadata
  
 +logger = init_logger(__name__)
-+
+ 
 +# sm8x split-KV prefill overlay.  S=0 (or 1) keeps the shipped path, S>1
 +# splits the KV of full-attention prefill launches S ways.  See the module
 +# docstring for the numerics; buffers match the decode split path
@@ -125,9 +125,10 @@
 +        )
 +    return split
 +
- 
++
  @dataclass
  class Inkling2AttentionMetadata(FlashAttentionMetadata):
+     # Host copies for planning FA4 splits (exact for prefill requests).
 @@ -79,6 +165,16 @@
          super().__init__(*args, **kwargs)
          self._init_reorder_batch_threshold(1, supports_spec_as_decode=True)
@@ -145,7 +146,18 @@
      def build(
          self,
          common_prefix_len: int,
-@@ -308,6 +404,8 @@
+@@ -293,6 +389,10 @@
+         supported: tuple[str, ...] = ("auto", "bfloat16")
+         if current_platform.is_device_capability_family(120):
+             supported += ("float16", "fp8", "fp8_e4m3")
++        # sm8x recipe patch: unit-scale E4M3 KV with software conversion (patches/e4m3.py)
++        self.fp8_soft = not current_platform.has_device_capability(89)
++        if self.fp8_soft:
++            supported += ("fp8", "fp8_e4m3")
+         if cache_dtype not in supported:
+             raise ValueError(f"Inkling2 KV cache dtype must be one of {supported}")
+         self.fp8_kv = cache_dtype in ("fp8", "fp8_e4m3")
+@@ -308,6 +408,8 @@
  
      def process_weights_after_loading(self) -> None:
          self.rel_proj_shifted = shift_rel_proj(self.rel_logits_proj, self.is_local)
@@ -154,7 +166,7 @@
  
      def get_attn_backend(self) -> type[AttentionBackend]:
          return Inkling2AttentionBackend
-@@ -333,6 +431,17 @@
+@@ -333,6 +435,17 @@
          # ``linear`` on the weight bypasses the layer (and a LoRA wrapper's
          # forward), so the LoRA deltas are added here (no-op without LoRA).
          weight = self.qkvr.weight
@@ -172,7 +184,16 @@
          if x_k is x_q and x_v is x_q:
              projected = linear(x_q, weight)
              add_linear_lora(self.qkvr, projected, x_q, range(6))
-@@ -489,40 +598,62 @@
+@@ -352,7 +465,7 @@
+     ) -> tuple[torch.Tensor, torch.Tensor]:
+         if self.fp8_kv:
+             # Every loop pass owns byte storage containing unit-scale E4M3 KV.
+-            kv_cache = kv_cache.view(torch.float8_e4m3fn)
++            kv_cache = kv_cache.view(torch.uint8 if self.fp8_soft else torch.float8_e4m3fn)
+         key_cache, value_cache = kv_cache.transpose(1, 2).split(self.head_dim, dim=-1)
+         return (
+             canonicalize_singleton_dim_strides(key_cache),
+@@ -489,40 +602,62 @@
                  num_decodes,
              )
          if num_decode_tokens < num_tokens:
@@ -263,7 +284,7 @@
  
      def _plan_decode(
          self, md: FlashAttentionMetadata, num_tokens: int
-@@ -645,3 +776,83 @@
+@@ -645,3 +780,83 @@
          )
          out[nt:].zero_()
          lse[:, nt:].zero_()
