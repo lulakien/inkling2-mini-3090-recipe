@@ -1,0 +1,55 @@
+name: Benchmark report (your hardware)
+description: Share numbers from your cards. Other GPUs, other power limits, with or without gpu-unlock all help.
+title: "[report] <GPU> x<count>, <profile>"
+labels: ["benchmark-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! Numbers from other setups are the most useful thing you can send. Run the suite against a running server:
+        ```
+        LABEL=myrun MAXCTX=<max-model-len> bash tests/run_suite.sh
+        ```
+        A partial run (decode + prefill only) is fine too: `python3 tests/spec_bench.py out.json` and `python3 tests/prefill_ttft.py out.json`.
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Output of `bash tools/env_report.sh`
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Profile
+      options:
+        - launch/2gpu.sh
+        - launch/1gpu.sh (64k)
+        - PROFILE=128k launch/1gpu.sh
+        - custom (describe below)
+    validations:
+      required: true
+  - type: dropdown
+    id: unlock
+    attributes:
+      label: gpu-unlock
+      options:
+        - active
+        - not installed (stock cards)
+        - not applicable (not a GeForce card)
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Results
+      description: Paste the suite's printed summary, or attach the results/<LABEL> folder as a zip.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Cooling, NVLink/P2P, other processes on the GPU, changed switches, surprises.

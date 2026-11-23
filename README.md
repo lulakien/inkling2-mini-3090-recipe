@@ -136,6 +136,23 @@ request at 64K, more than 64K tokens of full attention take (2.25 GiB). `--no-as
 no measurable speed cost (A/B: decode 243 vs 242 tok/s, prefill 5.28K vs 5.29K tok/s). The 128K profile also halves
 the chunk size, which is where its prefill cost comes from.
 
+## Roadmap / help wanted
+
+Ideas collected from this repo's notes and the other Ampere ports
+([peaster](https://github.com/peaster/inkling-2-mini-vllm-2x3090), [HyperInkling](https://github.com/Pento95/HyperInkling),
+the [single-3090 vLLM fork](https://github.com/Hiutaky/vllm/tree/ampere-port), quidow's flags,
+[vllm#69165](https://github.com/vllm-project/vllm/pull/69165)). See [CONTRIBUTING.md](CONTRIBUTING.md) to help.
+
+| # | item | expected effect | status |
+|---|---|---|---|
+| 1 | short-conv cache holds only each step's tail (window + drafts + one 64-token block), not the whole prefill chunk | ~1.7 GiB more KV per request on 1 GPU, bigger prefill chunks | in progress |
+| 2 | FP8 E4M3 KV cache, emulated on sm_86 (the model is built for a unit-scale FP8 cache) | ~2x context on both profiles | planned |
+| 3 | more 2-GPU context: async off + larger `MAXLEN` (~3 GiB per card is unused at 262K) | 262K -> ~400K+ | planned |
+| 4 | multi-request throughput: decode attention split count, adaptive draft length, sm_86 expert-GEMM configs, more `MAXSEQS` | today 445 tok/s at 8 streams vs 690-750 in other ports | after 1-2 |
+| 5 | numbers on other cards (3090 Ti, A5000, A6000, 4090), NVLink pairs, stock cards without gpu-unlock | coverage | **help wanted**: open a benchmark report |
+| 6 | P2P via a patched open driver vs this repo's host-memory all-reduce, measured per all-reduce | 2-GPU decode | help wanted |
+| 7 | rebase onto upstream Ampere support once vllm#69165 ships | less patching | waiting |
+
 ## Test machine
 
 | | |
@@ -204,11 +221,16 @@ first.
 launch/     serve.sh (all switches), 2gpu.sh, 1gpu.sh (PROFILE=64k|128k), image.env (pinned image digest)
 patches/    files mounted over the image (+ hostar/ host-memory collectives, diffs/ vs the stock files)
 tests/      run_suite.sh and the tests above, data/ (MMLU subset), kernels/ (bit-exactness harnesses)
-tools/      fetch_haystack.sh, gpu_summary.py, gemm_tflops.py
+tools/      fetch_haystack.sh, gpu_summary.py, gemm_tflops.py, make_diffs.sh, env_report.sh (for issues)
 results/    raw JSON per profile: 2gpu, 1gpu_64k, 1gpu_128k, 2gpu_port_only, 2gpu_nospec, 2gpu_vision, kernels
 docs/       NOTES.md: engineering notes, where the time goes, what was tried and rejected
 gpu-unlock/ how this machine keeps the unlock boot entry current (CachyOS + Limine specific)
 ```
+
+## Contributing
+
+Benchmark reports from other cards, bug reports, ideas and patches are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md)
+and the issue templates.
 
 ## License
 

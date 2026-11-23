@@ -1,0 +1,37 @@
+name: Bug / it doesn't boot
+description: Boot failure, crash, out-of-memory, wrong output, a test that fails.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact launcher command, including every environment variable you set (MAXLEN, GPU, PROFILE, ...).
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment and server log
+      description: Output of `bash tools/env_report.sh` (it includes the last log lines of the running or crashed container).
+      render: text
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: The image is the pinned digest from `launch/image.env` (other builds need rebased patches)
+          required: true
+        - label: Nothing else (desktop, game, other model) was using the GPU
+        - label: I deleted the compile cache (`~/.cache/inkling2-vllm`) and it still happens

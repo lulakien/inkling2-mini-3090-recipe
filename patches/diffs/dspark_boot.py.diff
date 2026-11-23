@@ -1,5 +1,5 @@
 --- a/vllm/models/inkling2/nvidia/dspark.py
-+++ b/vllm/models/inkling2/nvidia/dspark_boot.py
++++ b/vllm/models/inkling2/nvidia/dspark.py
 @@ -49,6 +49,33 @@
  )
  from .ops.linear import linear

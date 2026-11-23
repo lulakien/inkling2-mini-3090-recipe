@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Model questions (not about this recipe)
+    url: https://huggingface.co/thinkingmachines/Inkling-2-Mini/discussions
+    about: Questions about the model itself go to its Hugging Face page.
+  - name: Official Ampere support in vLLM
+    url: https://github.com/vllm-project/vllm/pull/69165
+    about: The upstream PR. Once it ships, this recipe will be rebased onto it.

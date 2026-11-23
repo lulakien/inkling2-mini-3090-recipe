@@ -1,0 +1,34 @@
+name: Optimization idea / proposal
+description: A way to make it faster, fit more context, or use less memory. Measured or not.
+title: "[idea] "
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        See the roadmap in the README first; your idea may already be tracked there (then comment on that issue).
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: What to change and why it should help (profile, kernel trace, memory plan, a link to another port...).
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence so far
+      description: Measurements if you have them (A/B on the same boot or same machine), or "not measured yet".
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - decode
+        - prefill
+        - context / KV memory
+        - multi-request throughput
+        - quality / numerics
+        - other hardware
+        - usability / docs
