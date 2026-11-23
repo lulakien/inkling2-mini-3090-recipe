@@ -1,0 +1,26 @@
+{
+ "1": {
+  "aggregate_tok_s": 143.4,
+  "per_stream_tok_s": 145.6,
+  "mean_ttft_s": 0.053,
+  "wall_s": 3.57
+ },
+ "2": {
+  "aggregate_tok_s": 190.3,
+  "per_stream_tok_s": 110.1,
+  "mean_ttft_s": 0.081,
+  "wall_s": 5.38
+ },
+ "4": {
+  "aggregate_tok_s": 248.4,
+  "per_stream_tok_s": 72.7,
+  "mean_ttft_s": 0.111,
+  "wall_s": 8.25
+ },
+ "8": {
+  "aggregate_tok_s": 250.9,
+  "per_stream_tok_s": 71.5,
+  "mean_ttft_s": 3.729,
+  "wall_s": 16.33
+ }
+}

@@ -44,7 +44,7 @@
     "Modula-3"
    ]
   },
-  "seconds": 2.26
+  "seconds": 2.06
  },
  "completions_logprobs": {
   "pass": true,
@@ -52,17 +52,17 @@
    "text": " jumps over the lazy dog.\n\n",
    "lp0": -0.22239282727241516
   },
-  "seconds": 0.33
+  "seconds": 0.22
  },
  "prefix_cache_hit": {
   "pass": true,
   "evidence": {
    "prompt_tokens": 6619,
    "cached_tokens": 6592,
-   "cold_s": 1.522,
-   "warm_s": 0.084
+   "cold_s": 1.284,
+   "warm_s": 1.027
   },
-  "seconds": 1.61
+  "seconds": 2.31
  },
  "temp0_determinism": {
   "pass": true,
@@ -70,7 +70,7 @@
    "identical_runs": 3,
    "sample": "Tiny cores ignite  \nparallel light floods the dark  \npixels bloom at once  \n\nThe"
   },
-  "seconds": 12.12
+  "seconds": 12.1
  },
  "stop_sequence": {
   "pass": true,

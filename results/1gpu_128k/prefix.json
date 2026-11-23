@@ -4,19 +4,19 @@
  "A_cold": {
   "prompt": 13141,
   "cached": 0,
-  "wall_s": 2.982,
+  "wall_s": 2.484,
   "hit_delta": 0
  },
  "B_divergent": {
   "prompt": 13149,
-  "cached": 12608,
-  "wall_s": 0.171,
-  "hit_delta": 12608
+  "cached": 12288,
+  "wall_s": 0.194,
+  "hit_delta": 12288
  },
  "C_divergent": {
   "prompt": 13156,
-  "cached": 12608,
-  "wall_s": 0.175,
-  "hit_delta": 12608
+  "cached": 12288,
+  "wall_s": 0.196,
+  "hit_delta": 12288
  }
 }

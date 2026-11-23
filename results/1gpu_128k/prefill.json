@@ -1,62 +1,62 @@
 {
  "prefill_2048": [
   {
-   "seconds": 0.4237,
-   "tok_s": 4834
+   "seconds": 0.3531,
+   "tok_s": 5800
   },
   {
-   "seconds": 0.437,
-   "tok_s": 4686
+   "seconds": 0.3584,
+   "tok_s": 5715
   }
  ],
  "prefill_8192": [
   {
-   "seconds": 1.7693,
-   "tok_s": 4630
+   "seconds": 1.4958,
+   "tok_s": 5477
   },
   {
-   "seconds": 1.7794,
-   "tok_s": 4604
+   "seconds": 1.4881,
+   "tok_s": 5505
   }
  ],
  "prefill_16384": [
   {
-   "seconds": 3.7066,
-   "tok_s": 4420
+   "seconds": 3.1035,
+   "tok_s": 5279
   },
   {
-   "seconds": 3.7012,
-   "tok_s": 4427
+   "seconds": 3.0997,
+   "tok_s": 5286
   }
  ],
  "prefill_32768": [
   {
-   "seconds": 8.0379,
-   "tok_s": 4077
+   "seconds": 6.6894,
+   "tok_s": 4899
   },
   {
-   "seconds": 8.0485,
-   "tok_s": 4071
+   "seconds": 6.6925,
+   "tok_s": 4896
   }
  ],
  "prefill_65536": [
   {
-   "seconds": 18.5716,
-   "tok_s": 3529
+   "seconds": 15.0404,
+   "tok_s": 4357
   },
   {
-   "seconds": 18.5755,
-   "tok_s": 3528
+   "seconds": 15.0346,
+   "tok_s": 4359
   }
  ],
  "prefill_126976": [
   {
-   "seconds": 45.2297,
-   "tok_s": 2807
+   "seconds": 35.4303,
+   "tok_s": 3584
   },
   {
-   "seconds": 45.2332,
-   "tok_s": 2807
+   "seconds": 35.4324,
+   "tok_s": 3584
   }
  ]
 }
