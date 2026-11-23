@@ -1,8 +1,8 @@
 # Inkling 2 Mini on RTX 3090s: a vLLM recipe for 1 or 2 consumer Ampere GPUs
 
 Serve [`thinkingmachines/Inkling-2-Mini`](https://huggingface.co/thinkingmachines/Inkling-2-Mini) on **one RTX 3090
-(64K or 128K context)** or **two RTX 3090s (262K context)**, PCIe only, no NVLink, no P2P, power-capped at 280 W,
-with the shipped checkpoint unchanged.
+(128K context, or 262K with an FP8 KV cache)** or **two RTX 3090s (262K context)**, PCIe only, no NVLink, no P2P,
+power-capped at 280 W, with the shipped checkpoint unchanged.
 
 The official `vllm/vllm-openai:inkling-2-mini` image only supports Hopper/Blackwell. This repo has small file
 overlays (mounted read-only over that image, nothing rebuilt) that make it run on sm_86. A second set of overlays
@@ -21,21 +21,26 @@ is the sum across GPUs (the 2-GPU card's 41.8 GB should read 40.8 GiB).
 
 Same machine and checkpoint for every column. Batch 1 unless noted. Temp 0, reasoning effort "low" for decode.
 
-| | 2 GPUs (`launch/2gpu.sh`) | 1 GPU, 64K (`launch/1gpu.sh`) | 1 GPU, 128K (`PROFILE=128k`) |
+| | 2 GPUs (`launch/2gpu.sh`) | 1 GPU, 128K (`launch/1gpu.sh`) | 1 GPU, 262K (`PROFILE=262k`, FP8 KV) |
 |---|---|---|---|
-| max context / KV pool | 262,144 / 302,534 tok | 65,536 / 97,150 tok | 131,072 / 136,144 tok |
-| decode tok/s: code / explanation / story | **313 / 166 / 126** | **242 / 130 / 97** | **242 / 130 / 97** |
-| decode step (DSpark k=7) | 13.7-14.2 ms | 17.8-18.7 ms | 17.8-18.7 ms |
-| prefill tok/s at 2K / 16K / 64K | 7,480 / 7,140 / 6,280 | 5,700 / 5,250 / 4,390 (61K) | 4,690 / 4,430 / 3,530 |
-| prefill, near max context | 4,270 tok/s (254K in 59 s) | 4,390 tok/s (61K in 14 s) | 2,810 tok/s (127K in 45 s) |
-| agent turn: 13K prompt sharing a prefix with the previous one | 0.12 s (cold 1.9 s) | 0.14 s (cold 2.5 s) | 0.17 s (cold 3.0 s) |
-| 2 / 4 / 8 concurrent streams, total tok/s | 260 / 339 / 445 | 192 / 231 / - | 185 / 258 / - |
-| needle in haystack (5% and 90% depth) | 255K: both found | 62.5K: both found | 128K: both found |
-| MMLU, 57 subjects x 20, letter logits | 911 / 1140 (79.9%) | 912 / 1140 (80.0%) | 912 / 1140 (80.0%) |
+| max context / KV pool | 262,144 / 302,534 tok | 131,072 / 135,401 tok | 262,144 / 262,755 tok |
+| decode tok/s: code / explanation / story | **313 / 166 / 126** | **242 / 130 / 97** | **254 / 126 / 101** |
+| decode step (DSpark k=7) | 13.7-14.2 ms | 17.8-18.6 ms | 18.4-19.0 ms |
+| prefill tok/s at 2K / 16K / 64K | 7,480 / 7,140 / 6,280 | 5,800 / 5,280 / 4,360 | 5,420 / 4,640 / 3,370 |
+| prefill, near max context | 4,270 tok/s (254K in 59 s) | 3,580 tok/s (127K in 35 s) | 1,650 tok/s (254K in 154 s) |
+| agent turn: 13K prompt sharing a prefix with the previous one | 0.12 s (cold 1.9 s) | 0.19 s (cold 2.5 s) | 0.23 s (cold 2.8 s) |
+| 2 / 4 / 8 concurrent streams, total tok/s | 260 / 339 / 445 | 185 / 256 / - | 190 / 248 / 251 (4 at a time) |
+| needle in haystack (5% and 90% depth) | 255K: both found | 128K: both found | 255K and 262K: both found |
+| MMLU, 57 subjects x 20, letter logits | 911 / 1140 (79.9%) | 912 / 1140 (80.0%) | 911 / 1140 (79.9%) |
 | OpenAI API checks (`tests/api_smoke.py`) | 9/9 (+ image 10/10 with `MM=1`) | 9/9 | 9/9 |
 | temp-0 run-to-run determinism | 8/8 identical | 8/8 | 8/8 |
-| power while busy / max temp / peak VRAM | 277 W / 72 C / 21.0 GB per card | 276 W / 67 C / 23.4 GB | 277 W / 67 C / 23.4 GB |
-| boot (compile cache warm / first ever) | 40 s / 125 s, + 6-14 s warm-up | 35 s | 35 s |
+| power while busy / max temp / peak VRAM | 277 W / 72 C / 21.0 GB per card | 278 W / 67 C / 23.4 GB | 276 W / 68 C / 23.7 GB |
+| boot (compile cache warm / first ever) | 40 s / 125 s, + 6-14 s warm-up | 40 s, + 12 s warm-up | 35 s, + 10 s warm-up |
+
+The 262K single-GPU profile stores the KV cache as FP8 E4M3, converted in software on Ampere. Quality gates match
+bf16, but temp-0 outputs differ from the 128K profile within the first few hundred characters, and long prompts are slower
+(see Limitations). Its higher code and story decode numbers come from different draft acceptance on that different
+text (4.8 vs 4.5 tokens per step on code), not from a faster step.
 
 Decode speed depends on the text because speculative decoding (DSpark, the model's own drafter) accepts more
 tokens on predictable text: about 4.5 tokens per step on code, 2.4 on technical prose, 1.75 on stories.
@@ -70,8 +75,8 @@ hf download thinkingmachines/Inkling-2-Mini --revision ed40e7da625f594fc9c4990f5
 . launch/image.env && docker pull "$IMAGE"
 
 bash launch/2gpu.sh                    # two GPUs, 262K context
-bash launch/1gpu.sh                    # one GPU (GPU=0|1), 64K context
-PROFILE=128k bash launch/1gpu.sh       # one GPU, 128K context, ~15% slower prefill
+bash launch/1gpu.sh                    # one GPU (GPU=0|1), 128K context
+PROFILE=262k bash launch/1gpu.sh       # one GPU, 262K context, FP8 KV (slower long prompts)
 ```
 
 The server listens on `http://127.0.0.1:8000/v1` and the model name is `inkling-2-mini`. Stop it with
@@ -89,8 +94,8 @@ Reasoning: pass `"reasoning_effort": "none" | "low" | "medium" | "high"` (top le
 ```bash
 bash tools/fetch_haystack.sh                         # needle-test text, copied out of the pinned image
 LABEL=2gpu MAXCTX=262144 bash tests/run_suite.sh     # against a running 2gpu.sh server (~15 min)
-NAME=inkling2-1gpu LABEL=1gpu_64k MAXCTX=65536 bash tests/run_suite.sh
-bash tests/kernels/run.sh                            # bit-exactness of the two new prefill kernels (stop the server first)
+NAME=inkling2-1gpu LABEL=1gpu_128k MAXCTX=131072 bash tests/run_suite.sh   # ~10 min; 262k: ~30 min
+bash tests/kernels/run.sh                            # bit-exactness of the new kernels (stop the server first)
 ```
 
 | test | what it checks |
@@ -103,7 +108,7 @@ bash tests/kernels/run.sh                            # bit-exactness of the two 
 | `tests/needle.py` | find a planted line in a long code haystack at 5% and 90% depth, near max context |
 | `tests/greedy_check.py` | temp-0 outputs identical across runs (8 prompts) |
 | `tests/mmlu_letters.py` | MMLU 57 subjects x 20 questions, letter logits, sequential (`tests/data`, MIT-licensed MMLU) |
-| `tests/kernels/` | parallel MoE align (35 cases) and 2-pass attn_res (72 cases) vs the stock kernels, `torch.equal` |
+| `tests/kernels/` | parallel MoE align (35 cases) and 2-pass attn_res (72 cases) vs the stock kernels, `torch.equal`; software FP8 E4M3 encode/decode vs `torch.float8_e4m3fn`, bit-exact |
 | `tools/gpu_summary.py`, `tools/gemm_tflops.py` | power/temp/VRAM from the suite's 1 Hz log; sustained BF16 GEMM rate (unlock check) |
 
 Raw JSON for every run is in `results/`. Run-to-run variation is about 1-2% for prefill and decode step time.
@@ -125,16 +130,25 @@ file in `patches/diffs/`.
 | split-KV full attention for long prompts | 254K -9% |
 | parallel MoE align, 2-pass attn_res (bit-identical) | prefill +3.4% (1 GPU), +7.5% (2 GPUs) |
 | prefix-cache retention every 64 tokens | prefix hits when a new prompt diverges mid-message |
-| single GPU: W8 quantized at load, GMU 1.0 + 512 MiB KV margin, chunked prompt-logprob warm-up, input embedding in pinned host memory, `--no-async-scheduling` | context on one card: 3.7K -> 64K / 128K tokens |
+| single GPU: W8 quantized at load, GMU 1.0 + 512 MiB KV margin, chunked prompt-logprob warm-up, input embedding in pinned host memory, `--no-async-scheduling` | context on one card: 3.7K -> 114K tokens |
+| short-conv cache backs only each step's tail (`SCONV_TAIL=1`, single-GPU profiles) | 1 GPU: 131K with 1024-token prefill chunks (+18% prefill vs the old 512-token 128K profile) |
+| FP8 E4M3 KV cache with software conversion on sm_86 (`KV_DTYPE=fp8`, bit-exact vs torch's E4M3) | half the KV bytes: 262K on one GPU |
 | persistent Triton/inductor cache + post-boot warm-up | boot 90 -> 40 s, no compile stall on the first request |
 
-### Why one GPU can hold 128K
+### Why one GPU can hold 128K, and 262K with FP8
 
 vLLM's KV planner reserves room in every sliding-window and short-conv cache for the tokens in flight. With async
 scheduling that is two prefill chunks per cache. The model has 12 such caches, so this reserve took 2.36 GiB per
 request at 64K, more than 64K tokens of full attention take (2.25 GiB). `--no-async-scheduling` halves it, with
-no measurable speed cost (A/B: decode 243 vs 242 tok/s, prefill 5.28K vs 5.29K tok/s). The 128K profile also halves
-the chunk size, which is where its prefill cost comes from.
+no measurable speed cost (A/B: decode 243 vs 242 tok/s, prefill 5.28K vs 5.29K tok/s). `SCONV_TAIL=1` then shrinks
+the six short-conv reserves to each step's tail (window + drafts + one prefix-hit block), so 131K fits with full
+1024-token prefill chunks.
+
+262K needs the FP8 KV cache plus about 0.25 GiB that came from the memory vLLM keeps back after warm-up: smaller
+prompt-logprob warm-up chunks (less allocator fragmentation to reserve for), CUDA graphs only up to 16 tokens, and a
+smaller non-torch reserve so long prompts keep their split-KV attention buffers. The full budget and every A/B are in
+[`docs/NOTES.md`](docs/NOTES.md#the-262k-memory-budget). The KV pool is 262,755 tokens and shared, so while one
+request holds close to 262K tokens, other requests wait for room.
 
 ## Roadmap / help wanted
 
@@ -145,8 +159,8 @@ the [single-3090 vLLM fork](https://github.com/Hiutaky/vllm/tree/ampere-port), q
 
 | # | item | expected effect | status |
 |---|---|---|---|
-| [#1](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/1) | short-conv cache holds only each step's tail (window + drafts + one 64-token block), not the whole prefill chunk | ~1.7 GiB more KV per request on 1 GPU, bigger prefill chunks | in progress |
-| [#2](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/2) | FP8 E4M3 KV cache, emulated on sm_86 (the model is built for a unit-scale FP8 cache) | ~2x context on both profiles | planned |
+| [#1](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/1) | short-conv cache holds only each step's tail (window + drafts + one 64-token block), not the whole prefill chunk | ~1.7 GiB more KV per request on 1 GPU, bigger prefill chunks | **done** (`SCONV_TAIL=1`, 1-GPU profiles) |
+| [#2](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/2) | FP8 E4M3 KV cache, emulated on sm_86 (the model is built for a unit-scale FP8 cache) | ~2x context on both profiles | **done** (`KV_DTYPE=fp8`; 1 GPU: 262K; on 2 GPUs off by default and not gated) |
 | [#3](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/3) | more 2-GPU context: async off + larger `MAXLEN` (~3 GiB per card is unused at 262K) | 262K -> ~400K+ | planned |
 | [#4](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/4) | multi-request throughput: decode attention split count, adaptive draft length, sm_86 expert-GEMM configs, more `MAXSEQS` | today 445 tok/s at 8 streams vs 690-750 in other ports | after 1-2 |
 | [#5](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/5) | numbers on other cards (3090 Ti, A5000, A6000, 4090), NVLink pairs, stock cards without gpu-unlock | coverage | **help wanted**: open a benchmark report |
@@ -179,7 +193,8 @@ On the same machine with the earlier Qwen3.8-27B recipe, the unlock gave +37% pr
 bound and does not change. With the unlock, these cards sustain 91.5 TFLOPS dense BF16 at 280 W
 (`results/kernels/gemm_tflops.txt`); a stock 3090 is rated for 71 at boost clocks. Install notes for this machine
 are in [`gpu-unlock/`](gpu-unlock/README.md). It is third-party software that reprograms the GPU: read its README
-first.
+first. Check the GEMM rate before benchmarking (`tools/gemm_tflops.py`): a GPU reset after boot silently drops the
+unlock while the module stays loaded (seen here once: 64 instead of 91 TFLOPS, prefill ~22% lower until a reboot).
 
 ## Limitations and known issues
 
@@ -193,21 +208,28 @@ first.
   untested (try a smaller `MAXLEN` and `GMU` below 1.0). Another process using the GPU (even one that doesn't show in `nvidia-smi`, such as a
   game) also slows every number here.
 - **Tuned for one user.** At 4+ concurrent streams use `SPEC=0`. The KV pool is shared: on one GPU, two requests
-  can't both use 64K.
-- **Single-GPU long prompts are slower:** the 128K profile uses 512-token prefill chunks (-15% prefill).
-  Lowering `KV_MARGIN_MB` below 512 boots but runs out of memory on the first long prefill. Do not.
+  can't both use 128K (or, with the 262K profile, more than ~131K each).
+- **The 262K single-GPU profile changes precision and is slower on long prompts.** Its FP8 E4M3 KV cache is
+  converted in software (sm_86 has no FP8 instructions): decode steps are 3-5% slower, prefill 7% slower at 2K, 12% at
+  16K and 30% at 127K than the 128K profile (254K takes 154 s). Temp-0 output diverges from bf16 within the first
+  18-584 characters (8 greedy prompts, median ~330); the quality gates (MMLU, needles at 255K/262K, determinism) are unchanged. It leaves
+  ~600 tokens of KV beyond 262,144 and no room for more: do not raise `CG_MAX` or `PLP_CHUNK` there.
+- Lowering `KV_MARGIN_MB` below 512 boots but runs out of memory on the first long prefill. Do not.
 - **Reasoning cannot be fully turned off** (model behaviour, see the model card): even `reasoning_effort: "none"`
   writes a short reasoning block. Leave room for it in `max_tokens`. Structured output applies after it.
 - **Vision** (`MM=1`) is smoke-tested on 2 GPUs only (one image, correct answer; KV pool 284K tokens). It is
   untested on one GPU and with video. The default is text-only (`--language-model-only`).
-- **KV cache is bf16.** The image's FP8-KV path needs sm_89+.
+- **The KV cache is bf16 by default.** `KV_DTYPE=fp8` (used by the 262K single-GPU profile) is a precision change,
+  see above.
 - **int8 weights** (attention qkvr, LM head, Markov head, drafter) are a deliberate weight change. MMLU and the
   needle tests show no loss (911 vs 908 bf16), but outputs differ slightly from bf16. `W8=` restores bf16
   (measured on 2 GPUs; on one GPU it leaves less room for context, untested).
 - **Speculative decoding at temp 0 is not token-identical to plain greedy decoding** (bf16 batch-shape numerics). It is
   deterministic run to run (8/8). Quality is judged by task metrics, not token identity.
-- **Prefix cache:** hits need 64-token-aligned shared prefixes. The retention interval stores extra blocks per cached
-  prefix. With many distinct long prefixes, use `EXTRA="--prefix-cache-retention-interval 2048"`.
+- **Prefix cache:** hits need 64-token-aligned shared prefixes (128 with FP8 KV). With `SCONV_TAIL=1` (both
+  single-GPU profiles) a prompt that diverges mid-message from a cached one hits only up to the last 1024-token
+  prefill chunk boundary (13K agent probe: 12,288 of 12,608 shared tokens). The retention interval stores extra blocks
+  per cached prefix. With many distinct long prefixes, use `EXTRA="--prefix-cache-retention-interval 2048"`.
 - **MMLU here is a 1,140-question subset** scored by letter logits. It is a regression gate, not a reproduction of the
   model card.
 - Numbers are at a 280 W cap with gpu-unlock. 350 W measured: +5% prefill, +3% decode (see Results).
@@ -218,11 +240,12 @@ first.
 ## Layout
 
 ```
-launch/     serve.sh (all switches), 2gpu.sh, 1gpu.sh (PROFILE=64k|128k), image.env (pinned image digest)
+launch/     serve.sh (all switches), 2gpu.sh, 1gpu.sh (PROFILE=128k|262k), image.env (pinned image digest)
 patches/    files mounted over the image (+ hostar/ host-memory collectives, diffs/ vs the stock files)
 tests/      run_suite.sh and the tests above, data/ (MMLU subset), kernels/ (bit-exactness harnesses)
 tools/      fetch_haystack.sh, gpu_summary.py, gemm_tflops.py, make_diffs.sh, env_report.sh (for issues)
-results/    raw JSON per profile: 2gpu, 1gpu_64k, 1gpu_128k, 2gpu_port_only, 2gpu_nospec, 2gpu_vision, kernels
+results/    raw JSON per profile: 2gpu, 1gpu_128k, 1gpu_262k, 2gpu_port_only, 2gpu_nospec, 2gpu_vision, kernels;
+            old/ has superseded single-GPU runs (64K, 512-token 128K, development runs)
 docs/       NOTES.md: engineering notes, where the time goes, what was tried and rejected
 gpu-unlock/ how this machine keeps the unlock boot entry current (CachyOS + Limine specific)
 ```

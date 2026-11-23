@@ -19,5 +19,9 @@ to your own cards' PCI addresses.
 - `95-gpu-unlock-entry`: the post hook. It recreates a `linux-cachyos-gpu-unlock` boot entry after every
   kernel/initramfs update, with `gpu_unlock.targets=<PCI addresses>` on the kernel command line.
 
-Check it is active: `lsmod | grep gpu_unlock` and `cat /proc/cmdline` (look for `gpu_unlock.targets=`).
+Check it is active: `lsmod | grep gpu_unlock` and `cat /proc/cmdline` (look for `gpu_unlock.targets=`) show that the
+module was loaded, not that the cards are still unlocked. The real check is the GEMM rate (`tools/gemm_tflops.py`,
+~91 TFLOPS unlocked vs ~64 locked at 280 W). A GPU reset after boot (here: both cards re-initialised by the driver
+mid-session, `knvlinkCoreShutdownDeviceLinks` in the kernel log) drops the unlock while the module stays loaded;
+with `gpu_unlock.resume=0` only a reboot restored it. Prefill is then ~22% slower, decode unchanged.
 Read the upstream README first: the module reprograms the GPU, and you use it at your own risk.

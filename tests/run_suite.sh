@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Full public test suite against a running server. Writes results/<LABEL>/*.json + gpu.csv (power/temp/VRAM, 1 Hz).
 #   LABEL=2gpu MAXCTX=262144 PORT=8000 bash tests/run_suite.sh
-# Takes ~15 min (2 GPUs) to ~20 min (1 GPU, 128k). Needs tests/data/haystack (tools/fetch_haystack.sh).
+# Takes ~10 min (1 GPU, 128k), ~15 min (2 GPUs), ~25 min (1 GPU, 262k). Needs tests/data/haystack (tools/fetch_haystack.sh).
 set -uo pipefail
 R=$(cd "$(dirname "$0")/.." && pwd); T=$R/tests
 LABEL=${LABEL:?set LABEL}; MAXCTX=${MAXCTX:?set MAXCTX (the server max-model-len)}; PORT=${PORT:-8000}
