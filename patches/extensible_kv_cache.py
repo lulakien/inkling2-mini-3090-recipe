@@ -70,7 +70,9 @@ KV_CACHE_MARGIN_FRACTION = 0.75
 # allocator is capped to leave it free. The rest absorbs torch's fragmentation,
 # which scales with the transient where these do not: serving grew them by at
 # most 0.17 GiB on MI355 and not at all on GB200.
-KV_CACHE_NON_TORCH_RESERVE_BYTES = (2 if current_platform.is_rocm() else 1) << 29
+# sm8x patch: VLLM_KV_NON_TORCH_RESERVE_MB overrides that part (stock 512 MiB). The KV size does not change; a smaller
+# reserve raises the cap on torch's allocator so long prefills keep their workspaces at a tight single-GPU fit.
+KV_CACHE_NON_TORCH_RESERVE_BYTES = (int(_os.environ["VLLM_KV_NON_TORCH_RESERVE_MB"]) << 20) if _os.environ.get("VLLM_KV_NON_TORCH_RESERVE_MB") else ((2 if current_platform.is_rocm() else 1) << 29)
 # Share of the headroom warmup leaves uncommitted, on top of the profiled
 # activation peak, for transients the profiling run does not exercise.
 KV_CACHE_WARMUP_RESERVE_FRACTION = 0.1

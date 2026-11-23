@@ -25,8 +25,8 @@ body:
       label: Profile
       options:
         - launch/2gpu.sh
-        - launch/1gpu.sh (64k)
-        - PROFILE=128k launch/1gpu.sh
+        - launch/1gpu.sh (128k)
+        - PROFILE=262k launch/1gpu.sh
         - custom (describe below)
     validations:
       required: true

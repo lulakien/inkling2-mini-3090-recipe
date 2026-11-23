@@ -20,6 +20,7 @@
 #   ATTN_RES_2PASS=0  stock 3-pass attn_res prefill kernel                            [1]
 #   EMBED_HOST=1      input embedding table in pinned host memory (1-GPU profiles)    [0]
 #   KV_MARGIN_MB, PLP_CHUNK  KV margin floor / prompt-logprob chunk (1-GPU profiles)  [1024 MiB / 1024]
+#   NONTORCH_MB  memory kept free outside torch's allocator cap after KV sizing (1-GPU 262k) [512 MiB]
 #   KV_DTYPE=fp8 unit-scale E4M3 KV, converted in software on sm_86 (half the KV bytes)  [bfloat16]
 #   SCONV_TAIL=1 short-conv state cache backs only each step's tail (frees KV; see docs/NOTES.md) [0]
 #   ASYNC=0     --no-async-scheduling (frees sliding/conv in-flight reserve, 1-GPU)   [1]
@@ -92,6 +93,7 @@ docker run -d --name "$NAME" --gpus "${GPUS:-all}" --ipc=host \
   -e VLLM_ATTN_SPLITK="${ATTN_SPLITK:-5}" -e VLLM_ALIGN_MODE="${ALIGN_MODE:-auto}" \
   -e VLLM_ATTN_RES_2PASS="${ATTN_RES_2PASS:-1}" -e VLLM_SCONV_TAIL="${SCONV_TAIL:-0}" -e VLLM_INKLING_EMBED_HOST="${EMBED_HOST:-0}" \
   -e VLLM_PROMPT_LOGPROB_CHUNK="${PLP_CHUNK:-1024}" ${KV_MARGIN_MB:+-e VLLM_KV_MARGIN_FLOOR_MB=$KV_MARGIN_MB} \
+  ${NONTORCH_MB:+-e VLLM_KV_NON_TORCH_RESERVE_MB=$NONTORCH_MB} \
   -e TORCHINDUCTOR_CACHE_DIR=/root/.cache/inductor -e TRITON_CACHE_DIR=/root/.cache/triton \
   ${DOCKER_EXTRA:-} -p 127.0.0.1:$PORT:8000 "$IMAGE" "${ARGS[@]}" ${EXTRA:-} >/dev/null
 
