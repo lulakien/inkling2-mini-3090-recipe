@@ -23,6 +23,7 @@
 #   NONTORCH_MB  memory kept free outside torch's allocator cap after KV sizing (1-GPU 262k) [512 MiB]
 #   KV_DTYPE=fp8 unit-scale E4M3 KV, converted in software on sm_86 (half the KV bytes)  [bfloat16]
 #   SCONV_TAIL=1 short-conv state cache backs only each step's tail (frees KV; see docs/NOTES.md) [0]
+#   LOOP_SHARE=1 varloop checkpoints only (TML-d24-varloop-research): one KV cache for all loop passes  [0]
 #   ASYNC=0     --no-async-scheduling (frees sliding/conv in-flight reserve, 1-GPU)   [1]
 #   MM=1        keep the vision tower (untested beyond a smoke test, see README)      [0]
 #   EAGER=1     no CUDA graphs (debugging)                                            [0]
@@ -55,6 +56,7 @@ ARGS=(/model --served-model-name "$SERVED_NAME" --tensor-parallel-size "$TP"
 [ -n "${MNBT:-}" ] && ARGS+=(--max-num-batched-tokens "$MNBT")
 [ "${ASYNC:-1}" = 0 ] && ARGS+=(--no-async-scheduling)
 [ "${MM:-0}" = 1 ] || ARGS+=(--language-model-only)
+[ "${LOOP_SHARE:-0}" = 1 ] && ARGS+=(--hf-overrides '{"text_config":{"loop_share_cache":true}}')
 [ "${EAGER:-0}" = 1 ] && ARGS+=(--enforce-eager)
 [ "${SPEC:-1}" = 1 ] && ARGS+=(--speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"probabilistic"}')
 CEAR=${CEAR:-1}; [ "$TP" = 1 ] && CEAR=0
