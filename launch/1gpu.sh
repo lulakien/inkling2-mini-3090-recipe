@@ -19,6 +19,8 @@ case "${PROFILE:-128k}" in
 esac
 export TP=1 GPUS="device=${GPU:-0}" NAME="${NAME:-inkling2-1gpu}"
 export MAXLEN="${MAXLEN:-$D_MAXLEN}" KV_DTYPE="${KV_DTYPE:-$D_KV}" CG_MAX="${CG_MAX:-$D_CG}" PLP_CHUNK="${PLP_CHUNK:-$D_PLP}"
+# 262k has no memory left for the extra CUDA graphs of the per-batch-size draft schedule (and holds one request anyway)
+[ "${PROFILE:-128k}" = 262k ] && export SPEC_SCHED="${SPEC_SCHED-}"
 export NONTORCH_MB="${NONTORCH_MB:-$D_NT}" MNBT="${MNBT:-1024}" MAXSEQS="${MAXSEQS:-4}" SCONV_TAIL="${SCONV_TAIL:-1}"
 export GMU="${GMU:-1.0}" KV_MARGIN_MB="${KV_MARGIN_MB:-512}" EMBED_HOST="${EMBED_HOST:-1}" ASYNC="${ASYNC:-0}"
 exec bash "$(dirname "$0")/serve.sh"

@@ -12,6 +12,7 @@
 #   TP          tensor parallel size (2 or 1)                                         [2]
 #   MAXLEN MAXSEQS GMU CG_MAX MNBT                                                    [profile]
 #   SPEC=0      disable DSpark speculative decoding (k=7)                             [1]
+#   SPEC_SCHED  DSpark draft length per batch size, [[from,to,k],...]; empty = k=7 always [[[1,1,7],[2,2,4],[3,4,2],[5,256,1]]]
 #   W8=         int8 per-channel weights for attn qkvr, LM head, Markov head, drafter [attn,head,markov,draft]
 #   HOSTAR=0    TP2 small all-reduce/all-gather through mapped host memory off        [1]
 #   CEAR=0      TP2 prefill all-reduce on the copy engines off                        [1]
@@ -24,6 +25,8 @@
 #   KV_DTYPE=fp8 unit-scale E4M3 KV, converted in software on sm_86 (half the KV bytes)  [bfloat16]
 #   SCONV_TAIL=1 short-conv state cache backs only each step's tail (frees KV; see docs/NOTES.md) [0]
 #   LOOP_SHARE=1 varloop checkpoints only (TML-d24-varloop-research): one KV cache for all loop passes  [0]
+#   LPT=512     cap a long prompt's prefill chunk while other requests run: running streams keep ~2.4x more
+#               speed during a newcomer's prefill, the newcomer's TTFT grows ~50% (see experiments/concurrency) [off]
 #   ASYNC=0     --no-async-scheduling (frees sliding/conv in-flight reserve, 1-GPU)   [1]
 #   MM=1        keep the vision tower (untested beyond a smoke test, see README)      [0]
 #   EAGER=1     no CUDA graphs (debugging)                                            [0]
@@ -55,10 +58,16 @@ ARGS=(/model --served-model-name "$SERVED_NAME" --tensor-parallel-size "$TP"
 [ "$TP" = 2 ] && ARGS+=(--enable-batch-sharded-sampling)
 [ -n "${MNBT:-}" ] && ARGS+=(--max-num-batched-tokens "$MNBT")
 [ "${ASYNC:-1}" = 0 ] && ARGS+=(--no-async-scheduling)
+[ -n "${LPT:-}" ] && ARGS+=(--long-prefill-token-threshold "$LPT")
 [ "${MM:-0}" = 1 ] || ARGS+=(--language-model-only)
 [ "${LOOP_SHARE:-0}" = 1 ] && ARGS+=(--hf-overrides '{"text_config":{"loop_share_cache":true}}')
 [ "${EAGER:-0}" = 1 ] && ARGS+=(--enforce-eager)
-[ "${SPEC:-1}" = 1 ] && ARGS+=(--speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"probabilistic"}')
+# Draft length by batch size: k=7 for one stream, shorter drafts as more streams share a step (verify cost grows
+# with batch x k while acceptance does not). SPEC_SCHED= (empty) keeps k=7 at every batch size.
+SPEC_SCHED=${SPEC_SCHED-'[[1,1,7],[2,2,4],[3,4,2],[5,256,1]]'}
+SPEC_JSON='{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"probabilistic"'
+[ -n "$SPEC_SCHED" ] && SPEC_JSON="$SPEC_JSON,\"num_speculative_tokens_per_batch_size\":$SPEC_SCHED"
+[ "${SPEC:-1}" = 1 ] && ARGS+=(--speculative-config "$SPEC_JSON}")
 CEAR=${CEAR:-1}; [ "$TP" = 1 ] && CEAR=0
 
 docker rm -f "$NAME" >/dev/null 2>&1 || true
