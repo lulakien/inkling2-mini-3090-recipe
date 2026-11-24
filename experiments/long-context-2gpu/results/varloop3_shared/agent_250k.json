@@ -1,0 +1,74 @@
+{
+ "ctx_target": 250000,
+ "needles": 8,
+ "effort": "none",
+ "seed": 0,
+ "model": "inkling-2-mini",
+ "turns": [
+  {
+   "turn": "cold",
+   "prompt_tokens": 250534,
+   "cached_tokens": 0,
+   "ttft_s": 59.03,
+   "completion_tokens": 108,
+   "decode_tok_s": 152.2,
+   "wall_s": 59.74,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "46910",
+   "reasoning_tail": "o the DEPLOY NOTE comments in the files I read, which port does service orchid listen on?\n\nLooking back at my reads, in /repo/models/inkling/amd/mtp.py there's a comment:\n\"# DEPLOY NOTE: service orchid listens on port 46910.\"\n\nSo the answer is 46910. The user asks to reply with just the port number.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "warm",
+   "prompt_tokens": 252692,
+   "cached_tokens": 250496,
+   "ttft_s": 1.12,
+   "completion_tokens": 134,
+   "decode_tok_s": 149.9,
+   "wall_s": 2.01,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "57333",
+   "reasoning_tail": " at my reads, I saw in `/repo/models/deepseek_v41/common/ops/query_quant.py`:\n```\n# DEPLOY NOTE: service glacier listens on port 57333.\n```\n\nSo the answer is 57333.\n\nThe earlier question about orchid was answered with 46910. Now this question about glacier. I should just answer with the port number.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "multi",
+   "prompt_tokens": 252724,
+   "cached_tokens": 252672,
+   "ttft_s": 0.41,
+   "completion_tokens": 1898,
+   "decode_tok_s": 226.6,
+   "wall_s": 8.78,
+   "found": "8/8",
+   "success": true,
+   "found_incl_reasoning": "8/8",
+   "answer": "orchid: 46910\nbasalt: 41594\ntundra: 47187\nfalcon: 42263\nglacier: 57333\nember: 31441\nlantern: 48644\nmeridian: 39179",
+   "reasoning_tail": "i_k3/amd/specialized_decode/runtime/__init__.py - no\n- qwen3_5/xpu/specialized_decode/planning.py - no (truncated)\n- extra.py - no\n\nSo the list:\norchid: 46910\nbasalt: 41594\ntundra: 47187\nfalcon: 42263\nglacier: 57333\nember: 31441\nlantern: 48644\nmeridian: 39179\n\nThe user says answer directly, no tool.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "compact",
+   "prompt_tokens": 5437,
+   "cached_tokens": 0,
+   "ttft_s": 0.81,
+   "completion_tokens": 60,
+   "decode_tok_s": 194.7,
+   "wall_s": 1.12,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "39179",
+   "reasoning_tail": "The user asks which port service meridian listens on, and says answer directly from what I've already read, do not call any tool. The summary says service meridian listens on port 39179. So answer just the port number.",
+   "tool_calls": ""
+  }
+ ],
+ "total_wall_s": 71.6,
+ "peak_vram_mib": {
+  "0": 20752,
+  "1": 20752
+ }
+}

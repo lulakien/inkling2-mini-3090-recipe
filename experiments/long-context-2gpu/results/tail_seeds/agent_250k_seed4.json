@@ -1,0 +1,74 @@
+{
+ "ctx_target": 250000,
+ "needles": 8,
+ "effort": "none",
+ "seed": 4,
+ "model": "inkling-2-mini",
+ "turns": [
+  {
+   "turn": "cold",
+   "prompt_tokens": 250678,
+   "cached_tokens": 0,
+   "ttft_s": 58.64,
+   "completion_tokens": 88,
+   "decode_tok_s": 172.3,
+   "wall_s": 59.15,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "42339",
+   "reasoning_tail": "The user asks about DEPLOY NOTE comments in files I read. I need to find \"service basalt\". In the conversation, I saw:\n\n- \"# DEPLOY NOTE: service basalt listens on port 42339.\" in /repo/models/mistral/mistral_large4/nvidia/model.py\n\nSo the answer is 42339.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "warm",
+   "prompt_tokens": 253170,
+   "cached_tokens": 250624,
+   "ttft_s": 1.15,
+   "completion_tokens": 68,
+   "decode_tok_s": 223.0,
+   "wall_s": 1.45,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "42602",
+   "reasoning_tail": "The user asks which port service juniper listens on. I read /repo/models/deepseek_v41/nvidia/__init__.py which contains \"# DEPLOY NOTE: service juniper listens on port 42602.\" So answer 42602.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "multi",
+   "prompt_tokens": 253202,
+   "cached_tokens": 253120,
+   "ttft_s": 0.4,
+   "completion_tokens": 758,
+   "decode_tok_s": 285.1,
+   "wall_s": 3.05,
+   "found": "8/8",
+   "success": true,
+   "found_incl_reasoning": "8/8",
+   "answer": "basalt: 42339\ntundra: 45161\nember: 51898\nnimbus: 51340\njuniper: 42602\nwillow: 54660\nmeridian: 52172\nobsidian: 21986",
+   "reasoning_tail": "t 42602.\" \u2713\n6. beam/nvidia/model.py: \"# DEPLOY NOTE: service willow listens on port 54660.\" \u2713\n7. inkling/amd/ops/qkvr_prep.py: \"# DEPLOY NOTE: service meridian listens on port 52172.\" \u2713\n8. inkling2/nvidia/ops/attn_res.py: \"# DEPLOY NOTE: service obsidian listens on port 21986.\" \u2713\n\nThat's 8 services.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "compact",
+   "prompt_tokens": 5437,
+   "cached_tokens": 0,
+   "ttft_s": 0.81,
+   "completion_tokens": 46,
+   "decode_tok_s": 237.9,
+   "wall_s": 1.0,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "21986",
+   "reasoning_tail": "The user asks which port service obsidian listens on. From the summary, I have: service obsidian listens on port 21986. They want just the port number.",
+   "tool_calls": ""
+  }
+ ],
+ "total_wall_s": 64.7,
+ "peak_vram_mib": {
+  "0": 20738,
+  "1": 20738
+ }
+}

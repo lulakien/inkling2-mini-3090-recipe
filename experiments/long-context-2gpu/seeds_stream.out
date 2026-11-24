@@ -1,0 +1,11 @@
+== tail
+{"turn": "cold", "prompt_tokens": 250807, "cached_tokens": 0, "ttft_s": 58.84, "completion_tokens": 96, "decode_tok_s": 190.3, "wall_s": 59.34, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 253378, "cached_tokens": 253312, "ttft_s": 0.4, "completion_tokens": 2157, "decode_tok_s": 250.7, "wall_s": 9.01, "found": "8/8", "success": true, "found_incl_reasoning": "8/8"}
+{"turn": "cold", "prompt_tokens": 251882, "cached_tokens": 0, "ttft_s": 59.17, "completion_tokens": 380, "decode_tok_s": 254.8, "wall_s": 60.66, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 254589, "cached_tokens": 254528, "ttft_s": 0.41, "completion_tokens": 4096, "decode_tok_s": 355.7, "wall_s": 11.92, "found": "0/8", "success": false, "found_incl_reasoning": "4/8"}
+{"ctx_a": 200000, "ctx_b": 65536, "join_after_chunks": 50, "a_cold_prefill_s": 43.0, "b_alone_ttft_s": 10.56, "a_warm_ttft_s": 43.0, "a_tok_s_before_join": 182.5, "a_tok_s_during_b_prefill": 11.4, "a_tok_s_both_decoding": 134.0, "a_tok_s_after_b_done": 179.6, "a_longest_gap_s": 0.72, "a_longest_gap_at_s_after_join": 5.11, "b_ttft_with_a_running_s": 11.29, "b_tok_s": 196.3, "a_completion_tokens": 8000, "b_completion_tokens": 800, "a_prompt_tokens": 200156, "a_cached": 0, "b_prompt_tokens": 65142}
+== bf16
+{"turn": "cold", "prompt_tokens": 250807, "cached_tokens": 0, "ttft_s": 58.85, "completion_tokens": 98, "decode_tok_s": 202.3, "wall_s": 59.33, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 253378, "cached_tokens": 253312, "ttft_s": 0.4, "completion_tokens": 2065, "decode_tok_s": 247.1, "wall_s": 8.76, "found": "8/8", "success": true, "found_incl_reasoning": "8/8"}
+{"turn": "cold", "prompt_tokens": 251882, "cached_tokens": 0, "ttft_s": 59.19, "completion_tokens": 380, "decode_tok_s": 243.5, "wall_s": 60.75, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 254589, "cached_tokens": 254528, "ttft_s": 0.41, "completion_tokens": 758, "decode_tok_s": 272.7, "wall_s": 3.19, "found": "8/8", "success": true, "found_incl_reasoning": "8/8"}

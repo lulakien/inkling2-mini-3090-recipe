@@ -1,0 +1,74 @@
+{
+ "ctx_target": 250000,
+ "needles": 8,
+ "effort": "none",
+ "seed": 1,
+ "model": "inkling-2-mini",
+ "turns": [
+  {
+   "turn": "cold",
+   "prompt_tokens": 250807,
+   "cached_tokens": 0,
+   "ttft_s": 58.84,
+   "completion_tokens": 96,
+   "decode_tok_s": 190.3,
+   "wall_s": 59.34,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "39604",
+   "reasoning_tail": "The user asks about DEPLOY NOTE comments in files read. I need to find \"service quill\". In the conversation, I saw:\n\n- \"# DEPLOY NOTE: service quill listens on port 39604.\" in /repo/models/kimi_k3/nvidia/specialized_decode/cutedsl/mla/value.py\n\nSo answer: 39604.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "warm",
+   "prompt_tokens": 253346,
+   "cached_tokens": 250752,
+   "ttft_s": 1.18,
+   "completion_tokens": 62,
+   "decode_tok_s": 190.2,
+   "wall_s": 1.5,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "39170",
+   "reasoning_tail": "The user asks which port service tundra listens on. I read /repo/models/mistral/nvidia/mlp.py which contains \"# DEPLOY NOTE: service tundra listens on port 39170.\" So answer 39170.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "multi",
+   "prompt_tokens": 253378,
+   "cached_tokens": 253312,
+   "ttft_s": 0.4,
+   "completion_tokens": 2157,
+   "decode_tok_s": 250.7,
+   "wall_s": 9.01,
+   "found": "8/8",
+   "success": true,
+   "found_incl_reasoning": "8/8",
+   "answer": "quill: 39604\nwillow: 56151\nnimbus: 53817\ntundra: 39170\nlantern: 19927\njuniper: 50261\nbasalt: 16379\norchid: 13725",
+   "reasoning_tail": "tention/decode_topk_cute.py: no\n- inkling/nvidia/ops/__init__.py: no\n- kimi_k3/amd/mla.py: no\n- extra.py (the last file read): no DEPLOY NOTE visible\n\nSo the services:\nquill: 39604\nwillow: 56151\nnimbus: 53817\ntundra: 39170\nlantern: 19927\njuniper: 50261\nbasalt: 16379\norchid: 13725\n\nThat's 8 services.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "compact",
+   "prompt_tokens": 5438,
+   "cached_tokens": 0,
+   "ttft_s": 0.82,
+   "completion_tokens": 49,
+   "decode_tok_s": 238.5,
+   "wall_s": 1.02,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "16379",
+   "reasoning_tail": "The user asks which port service basalt listens on. From the summary, I have: \"service basalt listens on port 16379\". Answer directly with just the port number.",
+   "tool_calls": ""
+  }
+ ],
+ "total_wall_s": 70.9,
+ "peak_vram_mib": {
+  "0": 20736,
+  "1": 20736
+ }
+}

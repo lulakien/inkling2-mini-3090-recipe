@@ -1,0 +1,1 @@
+MODEL_DIR=inkling2-mini SCONV_TAIL=1 ASYNC=0 MAXLEN=524288 MAXSEQS=4 bash launch/2gpu.sh

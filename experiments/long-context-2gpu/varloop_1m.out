@@ -1,0 +1,12 @@
+== agent 1M x16
+{"turn": "cold", "prompt_tokens": 1004957, "cached_tokens": 0, "ttft_s": 624.96, "completion_tokens": 115, "decode_tok_s": 81.4, "wall_s": 626.36, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "warm", "prompt_tokens": 1006967, "cached_tokens": 1004928, "ttft_s": 3.42, "completion_tokens": 147, "decode_tok_s": 89.6, "wall_s": 5.05, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 1006999, "cached_tokens": 1006912, "ttft_s": 1.51, "completion_tokens": 4096, "decode_tok_s": 124.0, "wall_s": 34.54, "found": "0/16", "success": false, "found_incl_reasoning": "16/16"}
+{"turn": "compact", "prompt_tokens": 5533, "cached_tokens": 0, "ttft_s": 0.99, "completion_tokens": 57, "decode_tok_s": 243.3, "wall_s": 1.22, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"total_wall_s": 667.2, "peak_vram_mib": {"0": 23632, "1": 23632}}
+== second stream
+{"ctx_a": 200000, "ctx_b": 65536, "join_after_chunks": 300, "a_cold_prefill_s": 51.6, "b_alone_ttft_s": 12.96, "a_warm_ttft_s": 0.33, "a_tok_s_before_join": 440.0, "a_tok_s_during_b_prefill": 35.9, "a_tok_s_both_decoding": 0.0, "a_tok_s_after_b_done": 0.0, "a_longest_gap_s": 0.41, "a_longest_gap_at_s_after_join": 4.27, "b_ttft_with_a_running_s": 14.12, "b_tok_s": 153.0, "a_completion_tokens": 3000, "b_completion_tokens": 800, "a_prompt_tokens": 200156, "a_cached": 200128, "b_prompt_tokens": 65142}
+== decode
+code 0.6 {'tok_s': 265.2, 'tokens': 1275, 'mean_accepted_per_step': 2.93, 'tokens_per_step': 3.93, 'ms_per_step': 14.84}
+explain 0.6 {'tok_s': 137.5, 'tokens': 528, 'mean_accepted_per_step': 1.0, 'tokens_per_step': 2.0, 'ms_per_step': 14.54}
+story 0.6 {'tok_s': 120.2, 'tokens': 1158, 'mean_accepted_per_step': 0.7, 'tokens_per_step': 1.7, 'ms_per_step': 14.1}

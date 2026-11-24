@@ -1,0 +1,74 @@
+{
+ "ctx_target": 250000,
+ "needles": 8,
+ "effort": "none",
+ "seed": 3,
+ "model": "inkling-2-mini",
+ "turns": [
+  {
+   "turn": "cold",
+   "prompt_tokens": 250392,
+   "cached_tokens": 0,
+   "ttft_s": 58.3,
+   "completion_tokens": 92,
+   "decode_tok_s": 188.5,
+   "wall_s": 58.78,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "14639",
+   "reasoning_tail": "The user asks about DEPLOY NOTE comments in files read. I need to find \"service saffron\". In the conversation, I saw:\n\n- \"# DEPLOY NOTE: service saffron listens on port 14639.\" in /repo/models/deepseek_v4/common/ops/save_partial_states.py\n\nSo the answer is 14639.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "warm",
+   "prompt_tokens": 252539,
+   "cached_tokens": 250368,
+   "ttft_s": 1.11,
+   "completion_tokens": 97,
+   "decode_tok_s": 184.5,
+   "wall_s": 1.63,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "14106",
+   "reasoning_tail": "The user asks which port service cobalt listens on. I need to check the DEPLOY NOTE comments in the files I read. I recall seeing \"# DEPLOY NOTE: service cobalt listens on port 14106.\" in /repo/models/muse_spark/nvidia/specialized_decode/cutedsl/oproj/__init__.py. So the answer is 14106.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "multi",
+   "prompt_tokens": 252571,
+   "cached_tokens": 252480,
+   "ttft_s": 0.4,
+   "completion_tokens": 1999,
+   "decode_tok_s": 254.2,
+   "wall_s": 8.26,
+   "found": "8/8",
+   "success": true,
+   "found_incl_reasoning": "8/8",
+   "answer": "saffron: 14639\norchid: 30577\njuniper: 46577\nharbor: 19828\ncobalt: 14106\nfalcon: 57416\nwillow: 44504\nlantern: 54075",
+   "reasoning_tail": "layer.py: lantern 54075 \u2713\n- minimax_m3/nvidia/specialized_decode/runtime/__init__.py: no\n- deepseek_v41/amd/ops/engram_host_table.py: no\n- extra.py: no\n\nSo the list:\nsaffron: 14639\norchid: 30577\njuniper: 46577\nharbor: 19828\ncobalt: 14106\nfalcon: 57416\nwillow: 44504\nlantern: 54075\n\nThat's 8 services.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "compact",
+   "prompt_tokens": 5438,
+   "cached_tokens": 0,
+   "ttft_s": 0.82,
+   "completion_tokens": 46,
+   "decode_tok_s": 207.7,
+   "wall_s": 1.03,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "54075",
+   "reasoning_tail": "The user asks which port service lantern listens on. From the summary, I have: service lantern listens on port 54075. They want just the port number.",
+   "tool_calls": ""
+  }
+ ],
+ "total_wall_s": 69.7,
+ "peak_vram_mib": {
+  "0": 20738,
+  "1": 20738
+ }
+}

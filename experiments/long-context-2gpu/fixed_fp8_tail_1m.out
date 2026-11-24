@@ -1,0 +1,21 @@
+== decode
+story 0.0 {'tok_s': 117.7, 'tokens': 1212, 'mean_accepted_per_step': 0.82, 'tokens_per_step': 1.82, 'ms_per_step': 15.47}
+code 0.6 {'tok_s': 271.6, 'tokens': 1405, 'mean_accepted_per_step': 3.48, 'tokens_per_step': 4.48, 'ms_per_step': 16.47}
+explain 0.6 {'tok_s': 163.7, 'tokens': 1322, 'mean_accepted_per_step': 1.6, 'tokens_per_step': 2.6, 'ms_per_step': 15.9}
+story 0.6 {'tok_s': 118.5, 'tokens': 1405, 'mean_accepted_per_step': 0.87, 'tokens_per_step': 1.87, 'ms_per_step': 15.81}
+== agent 64K
+{"turn": "cold", "prompt_tokens": 65071, "cached_tokens": 0, "ttft_s": 15.89, "completion_tokens": 90, "decode_tok_s": 243.4, "wall_s": 16.25, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "warm", "prompt_tokens": 65179, "cached_tokens": 65024, "ttft_s": 0.28, "completion_tokens": 83, "decode_tok_s": 224.6, "wall_s": 0.64, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 65211, "cached_tokens": 65152, "ttft_s": 0.23, "completion_tokens": 1213, "decode_tok_s": 325.1, "wall_s": 3.96, "found": "8/8", "success": true, "found_incl_reasoning": "8/8"}
+{"turn": "compact", "prompt_tokens": 5437, "cached_tokens": 2048, "ttft_s": 0.72, "completion_tokens": 46, "decode_tok_s": 181.4, "wall_s": 0.96, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"total_wall_s": 21.8, "peak_vram_mib": {"0": 23646, "1": 23646}}
+== agent 250K
+{"turn": "cold", "prompt_tokens": 250534, "cached_tokens": 0, "ttft_s": 102.25, "completion_tokens": 358, "decode_tok_s": 187.3, "wall_s": 104.16, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "warm", "prompt_tokens": 252692, "cached_tokens": 250496, "ttft_s": 2.03, "completion_tokens": 393, "decode_tok_s": 203.7, "wall_s": 3.96, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 252724, "cached_tokens": 252672, "ttft_s": 0.71, "completion_tokens": 4096, "decode_tok_s": 249.8, "wall_s": 17.1, "found": "0/8", "success": false, "found_incl_reasoning": "8/8"}
+{"turn": "compact", "prompt_tokens": 5437, "cached_tokens": 0, "ttft_s": 1.07, "completion_tokens": 42, "decode_tok_s": 226.1, "wall_s": 1.25, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"total_wall_s": 126.5, "peak_vram_mib": {"0": 23646, "1": 23646}}
+== MMLU
+{"accuracy": 0.8, "correct": 912, "n": 1140, "errors": 0, "no_letter": 0, "seconds": 66.9}
+== second stream
+{"ctx_a": 200000, "ctx_b": 65536, "join_after_chunks": 300, "a_cold_prefill_s": 72.7, "b_alone_ttft_s": 15.92, "a_warm_ttft_s": 0.58, "a_tok_s_before_join": 129.3, "a_tok_s_during_b_prefill": 11.5, "a_tok_s_both_decoding": 87.7, "a_tok_s_after_b_done": 129.5, "a_longest_gap_s": 0.36, "a_longest_gap_at_s_after_join": 17.29, "b_ttft_with_a_running_s": 17.82, "b_tok_s": 128.3, "a_completion_tokens": 3000, "b_completion_tokens": 800, "a_prompt_tokens": 200156, "a_cached": 200064, "b_prompt_tokens": 65142}

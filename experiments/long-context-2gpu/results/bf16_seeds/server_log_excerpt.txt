@@ -1,0 +1,1 @@
+GPU KV cache size: 302,534 tokens, Maximum concurrency for 262,144 tokens per request: 1.15x

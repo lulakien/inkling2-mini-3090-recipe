@@ -1,0 +1,74 @@
+{
+ "ctx_target": 65536,
+ "needles": 8,
+ "effort": "none",
+ "seed": 0,
+ "model": "inkling-2-mini",
+ "turns": [
+  {
+   "turn": "cold",
+   "prompt_tokens": 65071,
+   "cached_tokens": 0,
+   "ttft_s": 10.55,
+   "completion_tokens": 136,
+   "decode_tok_s": 232.2,
+   "wall_s": 11.13,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "10386",
+   "reasoning_tail": "\nLooking back at the files I read:\n- /repo/models/hy_v4_flash/nvidia/indexpool_prepare.py contains: `# DEPLOY NOTE: service ember listens on port 10386.`\n\nSo the answer is 10386.\n\nThe user explicitly says answer directly from what I've read, do not call any tool. So I should just reply with \"10386\".",
+   "tool_calls": ""
+  },
+  {
+   "turn": "warm",
+   "prompt_tokens": 65179,
+   "cached_tokens": 65024,
+   "ttft_s": 0.19,
+   "completion_tokens": 151,
+   "decode_tok_s": 217.7,
+   "wall_s": 0.88,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "37311",
+   "reasoning_tail": "o/models/muse_spark/nvidia/specialized_decode/cutedsl/boundary/all_gather_dual_norm.py`:\n\n```\n# DEPLOY NOTE: service quill listens on port 37311.\n```\n\nSo the answer is 37311.\n\nThe earlier extra read of /repo/models/extra.py was a bit odd but harmless. The question is just about quill. Answer: 37311.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "multi",
+   "prompt_tokens": 65211,
+   "cached_tokens": 65152,
+   "ttft_s": 0.15,
+   "completion_tokens": 1129,
+   "decode_tok_s": 324.9,
+   "wall_s": 3.62,
+   "found": "8/8",
+   "success": true,
+   "found_incl_reasoning": "8/8",
+   "answer": "ember: 10386\nsaffron: 14572\nnimbus: 30694\njuniper: 36823\nquill: 37311\nharbor: 51407\nobsidian: 56104\nmeridian: 42381",
+   "reasoning_tail": "1/amd/model.py: no (truncated, but I didn't see one)\n- extra.py: no\n\nSo the list:\nember: 10386\nsaffron: 14572\nnimbus: 30694\njuniper: 36823\nquill: 37311\nharbor: 51407\nobsidian: 56104\nmeridian: 42381\n\nThe user asked to answer directly from what I've read, not call any tool. So I should just list them.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "compact",
+   "prompt_tokens": 5437,
+   "cached_tokens": 2048,
+   "ttft_s": 0.54,
+   "completion_tokens": 57,
+   "decode_tok_s": 228.7,
+   "wall_s": 0.78,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "42381",
+   "reasoning_tail": "The user is asking a direct question based on the summary: which port does service meridian listen on? The summary says \"service meridian listens on port 42381\". They want just the port number, no tool calls.",
+   "tool_calls": ""
+  }
+ ],
+ "total_wall_s": 16.4,
+ "peak_vram_mib": {
+  "0": 20752,
+  "1": 20752
+ }
+}

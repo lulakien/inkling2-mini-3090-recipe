@@ -1,0 +1,18 @@
+== fixed_bf16_t4096 decode
+story 0.0 {'tok_s': 126.3, 'tokens': 1500, 'mean_accepted_per_step': 0.72, 'tokens_per_step': 1.72, 'ms_per_step': 13.59}
+code 0.6 {'tok_s': 298.9, 'tokens': 1354, 'mean_accepted_per_step': 3.27, 'tokens_per_step': 4.27, 'ms_per_step': 14.29}
+explain 0.6 {'tok_s': 168.7, 'tokens': 1067, 'mean_accepted_per_step': 1.4, 'tokens_per_step': 2.4, 'ms_per_step': 14.18}
+story 0.6 {'tok_s': 130.1, 'tokens': 1486, 'mean_accepted_per_step': 0.82, 'tokens_per_step': 1.82, 'ms_per_step': 13.96}
+== fixed_bf16_t4096 agent 64K
+{"turn": "cold", "prompt_tokens": 65071, "cached_tokens": 0, "ttft_s": 10.54, "completion_tokens": 89, "decode_tok_s": 268.4, "wall_s": 10.87, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "warm", "prompt_tokens": 65179, "cached_tokens": 65024, "ttft_s": 0.18, "completion_tokens": 83, "decode_tok_s": 263.0, "wall_s": 0.49, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 65211, "cached_tokens": 65152, "ttft_s": 0.15, "completion_tokens": 828, "decode_tok_s": 404.4, "wall_s": 2.2, "found": "8/8", "success": true, "found_incl_reasoning": "8/8"}
+{"turn": "compact", "prompt_tokens": 5437, "cached_tokens": 0, "ttft_s": 0.81, "completion_tokens": 42, "decode_tok_s": 219.8, "wall_s": 1.0, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"total_wall_s": 14.6, "peak_vram_mib": {"0": 20742, "1": 20742}}
+== fixed_bf16_t4096 agent 250K
+{"turn": "cold", "prompt_tokens": 250534, "cached_tokens": 0, "ttft_s": 58.79, "completion_tokens": 372, "decode_tok_s": 242.6, "wall_s": 60.32, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "warm", "prompt_tokens": 252692, "cached_tokens": 250496, "ttft_s": 1.1, "completion_tokens": 357, "decode_tok_s": 222.3, "wall_s": 2.7, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 252724, "cached_tokens": 252672, "ttft_s": 0.39, "completion_tokens": 3301, "decode_tok_s": 279.6, "wall_s": 12.19, "found": "8/8", "success": true, "found_incl_reasoning": "8/8"}
+{"turn": "compact", "prompt_tokens": 5437, "cached_tokens": 0, "ttft_s": 0.81, "completion_tokens": 46, "decode_tok_s": 198.0, "wall_s": 1.04, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"total_wall_s": 76.3, "peak_vram_mib": {"0": 20742, "1": 20742}}
+done fixed_bf16_t4096 in 178 s -> ~/ai/inkling2-mini-3090-recipe/experiments/varloop/results/fixed_bf16_t4096

@@ -1,0 +1,74 @@
+{
+ "ctx_target": 250000,
+ "needles": 8,
+ "effort": "none",
+ "seed": 5,
+ "model": "inkling-2-mini",
+ "turns": [
+  {
+   "turn": "cold",
+   "prompt_tokens": 251982,
+   "cached_tokens": 0,
+   "ttft_s": 59.34,
+   "completion_tokens": 4096,
+   "decode_tok_s": 364.5,
+   "wall_s": 70.58,
+   "found": "0/1",
+   "success": false,
+   "found_incl_reasoning": "0/1",
+   "answer": "",
+   "reasoning_tail": "minimax_m3/amd/specialized_decode/runtime/spec.py? No.\n- In /repo/models/minimax_m3/amd/specialized_decode/runtime/spec.py? No.\n- In /repo/models/minimax_m3/amd/specialized_decode/runtime/spec.py? No.\n- In /repo/models/minimax_m3/amd/specialized_decode/runtime/spec.py? No.\n- In /repo/models/minimax_",
+   "tool_calls": ""
+  },
+  {
+   "turn": "warm",
+   "prompt_tokens": 253424,
+   "cached_tokens": 251904,
+   "ttft_s": 0.8,
+   "completion_tokens": 502,
+   "decode_tok_s": 192.6,
+   "wall_s": 3.4,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "19391",
+   "reasoning_tail": "w \"# DEPLOY NOTE: service lantern listens on port 19391.\" in deepseek_v4/amd/mono/stages/seam.py \u2014 yes: \"# DEPLOY NOTE: service lantern listens on port 19391.\"\n\nIn mnnvl_fusions.py: \"# DEPLOY NOTE: service quill listens on port 23676.\"\n\nIn o_proj/host.py: no DEPLOY NOTE visible.\n\nSo lantern = 19391.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "multi",
+   "prompt_tokens": 253456,
+   "cached_tokens": 253376,
+   "ttft_s": 0.42,
+   "completion_tokens": 4096,
+   "decode_tok_s": 270.4,
+   "wall_s": 15.56,
+   "found": "0/8",
+   "success": false,
+   "found_incl_reasoning": "8/8",
+   "answer": "",
+   "reasoning_tail": "decode/sampling/sharded_markov_cute.py - no.\n\nAlso check deepseek_v41/nvidia/specialized_decode/ampere/attention.py - no.\n\nAlso check deepseek_v41/nvidia/specialized_decode/ampere/__init__.py - no.\n\nAlso check deepseek_v41/nvidia/ops/engram_peer.py - no.\n\nAlso check deepseek_v41/nvidia/ops/__init__.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "compact",
+   "prompt_tokens": 5437,
+   "cached_tokens": 0,
+   "ttft_s": 0.81,
+   "completion_tokens": 42,
+   "decode_tok_s": 217.3,
+   "wall_s": 1.0,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "21914",
+   "reasoning_tail": "The user asks which port service willow listens on. From the summary, I have: service willow listens on port 21914. Answer directly.",
+   "tool_calls": ""
+  }
+ ],
+ "total_wall_s": 90.5,
+ "peak_vram_mib": {
+  "0": 20738,
+  "1": 20738
+ }
+}

@@ -1,0 +1,74 @@
+{
+ "ctx_target": 500000,
+ "needles": 8,
+ "effort": "none",
+ "seed": 0,
+ "model": "inkling-2-mini",
+ "turns": [
+  {
+   "turn": "cold",
+   "prompt_tokens": 502035,
+   "cached_tokens": 0,
+   "ttft_s": 166.82,
+   "completion_tokens": 356,
+   "decode_tok_s": 149.2,
+   "wall_s": 169.2,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "28041",
+   "reasoning_tail": " \"# DEPLOY NOTE: service glacier listens on port 54609.\"\n- models/inkling/nvidia/ops/qkvr_prep.py: \"# DEPLOY NOTE: service orchid listens on port 39681.\"\n- models/deepseek_v41/nvidia/specialized_decode/ampere/sparse_mla.py: \"# DEPLOY NOTE: service saffron listens on port 23305.\"\n\nSo tundra -> 28041.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "warm",
+   "prompt_tokens": 504844,
+   "cached_tokens": 502016,
+   "ttft_s": 1.98,
+   "completion_tokens": 358,
+   "decode_tok_s": 157.9,
+   "wall_s": 4.24,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "10649",
+   "reasoning_tail": "cialized_decode/ampere/sparse_mla.py\n- \"# DEPLOY NOTE: service orchid listens on port 39681.\" in models/inkling/nvidia/ops/qkvr_prep.py\n- \"# DEPLOY NOTE: service glacier listens on port 54609.\" in models/mistral/mistral_large4/amd/specialized_decode/mono/common/runtime/hip_ipc.py\n\nSo nimbus = 10649.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "multi",
+   "prompt_tokens": 504876,
+   "cached_tokens": 504064,
+   "ttft_s": 0.9,
+   "completion_tokens": 1134,
+   "decode_tok_s": 197.3,
+   "wall_s": 6.64,
+   "found": "8/8",
+   "success": true,
+   "found_incl_reasoning": "8/8",
+   "answer": "tundra: 28041\nmeridian: 23917\nnimbus: 10649\nfalcon: 25061\nglacier: 54609\nquill: 53773\nsaffron: 23305\norchid: 39681",
+   "reasoning_tail": "lized_decode/mono/common/runtime/hip_ipc.py \u2014 glacier 54609\n6. deepseek_v4/amd/__init__.py \u2014 quill 53773\n7. deepseek_v41/nvidia/specialized_decode/ampere/sparse_mla.py \u2014 saffron 23305\n8. inkling/nvidia/ops/qkvr_prep.py \u2014 orchid 39681\n\nThat's 8 services. I should list them one per line as name: port.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "compact",
+   "prompt_tokens": 5438,
+   "cached_tokens": 0,
+   "ttft_s": 0.82,
+   "completion_tokens": 42,
+   "decode_tok_s": 221.8,
+   "wall_s": 1.0,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "39681",
+   "reasoning_tail": "The user asks which port service orchid listens on. From the summary, I have: service orchid listens on port 39681. Answer directly.",
+   "tool_calls": ""
+  }
+ ],
+ "total_wall_s": 181.1,
+ "peak_vram_mib": {
+  "0": 20674,
+  "1": 20674
+ }
+}

@@ -42,6 +42,20 @@ bf16, but temp-0 outputs differ from the 128K profile within the first few hundr
 (see Limitations). Its higher code and story decode numbers come from different draft acceptance on that different
 text (4.8 vs 4.5 tokens per step on code), not from a faster step.
 
+**Longer context on 2 GPUs** (opt-in, `experiments/long-context-2gpu/RESULTS.md`):
+
+| | `PROFILE=262k` (default) | `PROFILE=512k` | `PROFILE=1m` |
+|---|---|---|---|
+| max context / KV pool | 262,144 / 302,534 | **524,288 / 535,422** (bf16 KV) | 1,048,576 / 1,325,310 (FP8 KV) |
+| what changes | | `SCONV_TAIL=1`, async scheduling off, 4 sequences | + FP8 KV, single-GPU memory knobs, 2 sequences |
+| decode tok/s, code / explanation / story | 315 / 166 / 126 | 333 / 171 / 127 | 286 / 159 / 118 |
+| cold agent prompt | 250K: 59 s | 250K: 59 s, 500K: 167 s | 250K: 102 s, 1.04M: 19.5 min |
+| warm agent turn (cached prefix) | 250K: 1.1 s | 500K: 2.0 s | 250K: 2.0 s |
+| retrieval, MMLU | 8/8 facts at 250K, 911 | 8/8 facts at 500K, 911 | needle at 1.04M found, 912 |
+
+A second agent joining a long-running one stalls the first to ~11 tok/s while its own prompt prefills (11-18 s for
+64K), then both decode at about three quarters of the single-stream speed.
+
 Decode speed depends on the text because speculative decoding (DSpark, the model's own drafter) accepts more
 tokens on predictable text: about 4.5 tokens per step on code, 2.4 on technical prose, 1.75 on stories.
 
@@ -160,8 +174,8 @@ the [single-3090 vLLM fork](https://github.com/Hiutaky/vllm/tree/ampere-port), q
 | # | item | expected effect | status |
 |---|---|---|---|
 | [#1](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/1) | short-conv cache holds only each step's tail (window + drafts + one 64-token block), not the whole prefill chunk | ~1.7 GiB more KV per request on 1 GPU, bigger prefill chunks | **done** (`SCONV_TAIL=1`, 1-GPU profiles) |
-| [#2](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/2) | FP8 E4M3 KV cache, emulated on sm_86 (the model is built for a unit-scale FP8 cache) | ~2x context on both profiles | **done** (`KV_DTYPE=fp8`; 1 GPU: 262K; on 2 GPUs off by default and not gated) |
-| [#3](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/3) | more 2-GPU context: async off + larger `MAXLEN` (~3 GiB per card is unused at 262K) | 262K -> ~400K+ | planned |
+| [#2](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/2) | FP8 E4M3 KV cache, emulated on sm_86 (the model is built for a unit-scale FP8 cache) | ~2x context on both profiles | **done** (`KV_DTYPE=fp8`; 1 GPU: 262K; 2 GPUs: the `1m` profile) |
+| [#3](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/3) | more 2-GPU context: async off + larger `MAXLEN` (~3 GiB per card is unused at 262K) | 262K -> ~400K+ | **done** (`PROFILE=512k` bf16, `PROFILE=1m` FP8; see the long-context table) |
 | [#4](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/4) | multi-request throughput: decode attention split count, adaptive draft length, sm_86 expert-GEMM configs, more `MAXSEQS` | today 445 tok/s at 8 streams vs 690-750 in other ports | after 1-2 |
 | [#5](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/5) | numbers on other cards (3090 Ti, A5000, A6000, 4090), NVLink pairs, stock cards without gpu-unlock | coverage | **help wanted**: open a benchmark report |
 | [#6](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/6) | P2P via a patched open driver vs this repo's host-memory all-reduce, measured per all-reduce | 2-GPU decode | help wanted |
@@ -207,6 +221,12 @@ unlock while the module stays loaded (seen here once: 64 instead of 91 TFLOPS, p
   A desktop or a game on the same card makes boot fail or the server run out of memory under load. Shared cards are
   untested (try a smaller `MAXLEN` and `GMU` below 1.0). Another process using the GPU (even one that doesn't show in `nvidia-smi`, such as a
   game) also slows every number here.
+- **The 2-GPU `1m` profile is for one long session that stays warm.** Its FP8 KV is converted in software, so a cold
+  1.04M-token prompt takes 19.5 min (250K: 102 s vs 59 s on the default). `512k` keeps bf16 and full prefill speed.
+  Retrieval was checked with planted facts up to 1.04M, which is easier than multi-needle benchmarks like MRCR.
+- **Not shipped:** the varloop research checkpoint (`LOOP_SHARE=1` works and halves its attention KV, but it scores
+  19-20 MMLU questions below Inkling 2 Mini here) and 2DSD (its Inkling runner does not fit one 24 GB card yet).
+  Both are written up in `experiments/long-context-2gpu/RESULTS.md`.
 - **Tuned for one user.** At 4+ concurrent streams use `SPEC=0`. The KV pool is shared: on one GPU, two requests
   can't both use 128K (or, with the 262K profile, more than ~131K each).
 - **The 262K single-GPU profile changes precision and is slower on long prompts.** Its FP8 E4M3 KV cache is

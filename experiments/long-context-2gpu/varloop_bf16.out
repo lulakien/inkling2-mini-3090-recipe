@@ -1,0 +1,40 @@
+== varloop3_native decode
+story 0.0 {'tok_s': 125.2, 'tokens': 915, 'mean_accepted_per_step': 0.72, 'tokens_per_step': 1.72, 'ms_per_step': 13.77}
+code 0.6 {'tok_s': 292.0, 'tokens': 1322, 'mean_accepted_per_step': 3.28, 'tokens_per_step': 4.28, 'ms_per_step': 14.65}
+explain 0.6 {'tok_s': 148.8, 'tokens': 624, 'mean_accepted_per_step': 1.14, 'tokens_per_step': 2.14, 'ms_per_step': 14.36}
+story 0.6 {'tok_s': 125.4, 'tokens': 1090, 'mean_accepted_per_step': 0.76, 'tokens_per_step': 1.76, 'ms_per_step': 14.06}
+== varloop3_native agent 64K
+{"turn": "cold", "prompt_tokens": 65071, "cached_tokens": 0, "ttft_s": 10.69, "completion_tokens": 93, "decode_tok_s": 235.4, "wall_s": 11.08, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "warm", "prompt_tokens": 65179, "cached_tokens": 65024, "ttft_s": 0.2, "completion_tokens": 118, "decode_tok_s": 259.0, "wall_s": 0.65, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 65211, "cached_tokens": 65152, "ttft_s": 0.16, "completion_tokens": 1775, "decode_tok_s": 362.2, "wall_s": 5.06, "found": "8/8", "success": true, "found_incl_reasoning": "8/8"}
+{"turn": "compact", "prompt_tokens": 5437, "cached_tokens": 0, "ttft_s": 0.82, "completion_tokens": 57, "decode_tok_s": 243.5, "wall_s": 1.05, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"total_wall_s": 17.8, "peak_vram_mib": {"0": 20742, "1": 20742}}
+== varloop3_native agent 250K
+{"turn": "cold", "prompt_tokens": 250534, "cached_tokens": 0, "ttft_s": 59.33, "completion_tokens": 91, "decode_tok_s": 140.3, "wall_s": 59.97, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "warm", "prompt_tokens": 252692, "cached_tokens": 250496, "ttft_s": 1.13, "completion_tokens": 105, "decode_tok_s": 144.5, "wall_s": 1.85, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 252724, "cached_tokens": 252672, "ttft_s": 0.42, "completion_tokens": 3029, "decode_tok_s": 266.6, "wall_s": 11.78, "found": "8/8", "success": true, "found_incl_reasoning": "8/8"}
+{"turn": "compact", "prompt_tokens": 5437, "cached_tokens": 0, "ttft_s": 0.81, "completion_tokens": 57, "decode_tok_s": 260.9, "wall_s": 1.03, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"total_wall_s": 74.6, "peak_vram_mib": {"0": 20742, "1": 20742}}
+== varloop3_native MMLU
+{"accuracy": 0.7824561403508772, "correct": 892, "n": 1140, "errors": 0, "no_letter": 0, "seconds": 62.0}
+done varloop3_native in 239 s -> ~/ai/inkling2-mini-3090-recipe/experiments/varloop/results/varloop3_native
+== varloop3_shared decode
+story 0.0 {'tok_s': 121.4, 'tokens': 1001, 'mean_accepted_per_step': 0.69, 'tokens_per_step': 1.69, 'ms_per_step': 13.95}
+code 0.6 {'tok_s': 293.6, 'tokens': 1089, 'mean_accepted_per_step': 3.37, 'tokens_per_step': 4.37, 'ms_per_step': 14.9}
+explain 0.6 {'tok_s': 139.1, 'tokens': 689, 'mean_accepted_per_step': 1.03, 'tokens_per_step': 2.03, 'ms_per_step': 14.56}
+story 0.6 {'tok_s': 116.9, 'tokens': 1220, 'mean_accepted_per_step': 0.66, 'tokens_per_step': 1.66, 'ms_per_step': 14.24}
+== varloop3_shared agent 64K
+{"turn": "cold", "prompt_tokens": 65071, "cached_tokens": 0, "ttft_s": 10.66, "completion_tokens": 105, "decode_tok_s": 250.7, "wall_s": 11.08, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "warm", "prompt_tokens": 65179, "cached_tokens": 65024, "ttft_s": 0.2, "completion_tokens": 153, "decode_tok_s": 208.9, "wall_s": 0.93, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 65211, "cached_tokens": 65152, "ttft_s": 0.16, "completion_tokens": 1132, "decode_tok_s": 336.9, "wall_s": 3.52, "found": "8/8", "success": true, "found_incl_reasoning": "8/8"}
+{"turn": "compact", "prompt_tokens": 5437, "cached_tokens": 0, "ttft_s": 0.83, "completion_tokens": 57, "decode_tok_s": 225.1, "wall_s": 1.08, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"total_wall_s": 16.6, "peak_vram_mib": {"0": 20752, "1": 20752}}
+== varloop3_shared agent 250K
+{"turn": "cold", "prompt_tokens": 250534, "cached_tokens": 0, "ttft_s": 59.03, "completion_tokens": 108, "decode_tok_s": 152.2, "wall_s": 59.74, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "warm", "prompt_tokens": 252692, "cached_tokens": 250496, "ttft_s": 1.12, "completion_tokens": 134, "decode_tok_s": 149.9, "wall_s": 2.01, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"turn": "multi", "prompt_tokens": 252724, "cached_tokens": 252672, "ttft_s": 0.41, "completion_tokens": 1898, "decode_tok_s": 226.6, "wall_s": 8.78, "found": "8/8", "success": true, "found_incl_reasoning": "8/8"}
+{"turn": "compact", "prompt_tokens": 5437, "cached_tokens": 0, "ttft_s": 0.81, "completion_tokens": 60, "decode_tok_s": 194.7, "wall_s": 1.12, "found": "1/1", "success": true, "found_incl_reasoning": "1/1"}
+{"total_wall_s": 71.6, "peak_vram_mib": {"0": 20752, "1": 20752}}
+== varloop3_shared MMLU
+{"accuracy": 0.781578947368421, "correct": 891, "n": 1140, "errors": 0, "no_letter": 0, "seconds": 59.6}
+done varloop3_shared in 233 s -> ~/ai/inkling2-mini-3090-recipe/experiments/varloop/results/varloop3_shared

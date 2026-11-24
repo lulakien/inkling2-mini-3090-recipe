@@ -1,0 +1,74 @@
+{
+ "ctx_target": 65536,
+ "needles": 8,
+ "effort": "none",
+ "seed": 0,
+ "model": "inkling-2-mini",
+ "turns": [
+  {
+   "turn": "cold",
+   "prompt_tokens": 65071,
+   "cached_tokens": 0,
+   "ttft_s": 11.45,
+   "completion_tokens": 89,
+   "decode_tok_s": 267.0,
+   "wall_s": 11.78,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "10386",
+   "reasoning_tail": "The user asks about DEPLOY NOTE comments in files I read. I need to find \"service ember\". In the first file /repo/models/hy_v4_flash/nvidia/indexpool_prepare.py, there's a comment: \"# DEPLOY NOTE: service ember listens on port 10386.\" So the answer is 10386.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "warm",
+   "prompt_tokens": 65179,
+   "cached_tokens": 65024,
+   "ttft_s": 0.2,
+   "completion_tokens": 83,
+   "decode_tok_s": 261.6,
+   "wall_s": 0.52,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "37311",
+   "reasoning_tail": "The user asks which port service quill listens on. I read the file /repo/models/muse_spark/nvidia/specialized_decode/cutedsl/boundary/all_gather_dual_norm.py which contains \"# DEPLOY NOTE: service quill listens on port 37311.\" So answer 37311.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "multi",
+   "prompt_tokens": 65211,
+   "cached_tokens": 65152,
+   "ttft_s": 0.16,
+   "completion_tokens": 828,
+   "decode_tok_s": 401.9,
+   "wall_s": 2.22,
+   "found": "8/8",
+   "success": true,
+   "found_incl_reasoning": "8/8",
+   "answer": "ember: 10386\nsaffron: 14572\nnimbus: 30694\njuniper: 36823\nquill: 37311\nharbor: 51407\nobsidian: 56104\nmeridian: 42381",
+   "reasoning_tail": "batch/__init__.py: \"# DEPLOY NOTE: service harbor listens on port 51407.\" \u2713\n7. glm5next/nvidia/specialized_decode/cutedsl/primitives.py: \"# DEPLOY NOTE: service obsidian listens on port 56104.\" \u2713\n8. mistral/nvidia/moe.py: \"# DEPLOY NOTE: service meridian listens on port 42381.\" \u2713\n\nThat's 8 services.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "compact",
+   "prompt_tokens": 5437,
+   "cached_tokens": 0,
+   "ttft_s": 0.83,
+   "completion_tokens": 42,
+   "decode_tok_s": 219.6,
+   "wall_s": 1.01,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "42381",
+   "reasoning_tail": "The user asks which port service meridian listens on. From the summary, I have: service meridian listens on port 42381. Answer directly.",
+   "tool_calls": ""
+  }
+ ],
+ "total_wall_s": 15.5,
+ "peak_vram_mib": {
+  "0": 20742,
+  "1": 20742
+ }
+}

@@ -1,0 +1,74 @@
+{
+ "ctx_target": 250000,
+ "needles": 8,
+ "effort": "none",
+ "seed": 2,
+ "model": "inkling-2-mini",
+ "turns": [
+  {
+   "turn": "cold",
+   "prompt_tokens": 251882,
+   "cached_tokens": 0,
+   "ttft_s": 59.17,
+   "completion_tokens": 380,
+   "decode_tok_s": 254.8,
+   "wall_s": 60.66,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "10905",
+   "reasoning_tail": "2016.\" in /repo/models/qwen4_exp/nvidia/ops/cute_dsl/__init__.py\n- \"# DEPLOY NOTE: service glacier listens on port 17413.\" in /repo/models/kimi_k3/nvidia/dsa.py\n- \"# DEPLOY NOTE: service juniper listens on port 44139.\" in /repo/models/hy_v4/nvidia/flashmla_sparse.py\n\nSo orchid listens on port 10905.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "warm",
+   "prompt_tokens": 254557,
+   "cached_tokens": 251840,
+   "ttft_s": 1.2,
+   "completion_tokens": 324,
+   "decode_tok_s": 228.3,
+   "wall_s": 2.62,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "44139",
+   "reasoning_tail": "ll listens on port 22172.\" in models/mistral/mistral_large4/amd/__init__.py\n- \"# DEPLOY NOTE: service glacier listens on port 17413.\" in models/kimi_k3/nvidia/dsa.py\n- \"# DEPLOY NOTE: service juniper listens on port 44139.\" in models/hy_v4/nvidia/flashmla_sparse.py\n\nSo juniper listens on port 44139.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "multi",
+   "prompt_tokens": 254589,
+   "cached_tokens": 254528,
+   "ttft_s": 0.41,
+   "completion_tokens": 4096,
+   "decode_tok_s": 355.7,
+   "wall_s": 11.92,
+   "found": "0/8",
+   "success": false,
+   "found_incl_reasoning": "4/8",
+   "answer": "",
+   "reasoning_tail": "plicated.py`: no.\n117. `/repo/models/deepseek_v41/nvidia/specialized_decode/logits/lm_head.py`: no.\n118. `/repo/models/deepseek_v41/nvidia/specialized_decode/moe/routed_expert_front_cute.py`: no.\n119. `/repo/models/deepseek_v41/nvidia/specialized_decode/moe/step.py`: no.\n120. `/repo/models/deepseek_",
+   "tool_calls": ""
+  },
+  {
+   "turn": "compact",
+   "prompt_tokens": 5438,
+   "cached_tokens": 0,
+   "ttft_s": 0.8,
+   "completion_tokens": 42,
+   "decode_tok_s": 258.1,
+   "wall_s": 0.96,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "22016",
+   "reasoning_tail": "The user asks which port service falcon listens on. From the summary, I have: service falcon listens on port 22016. Answer directly.",
+   "tool_calls": ""
+  }
+ ],
+ "total_wall_s": 76.2,
+ "peak_vram_mib": {
+  "0": 20736,
+  "1": 20736
+ }
+}

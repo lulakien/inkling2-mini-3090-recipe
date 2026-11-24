@@ -1,0 +1,74 @@
+{
+ "ctx_target": 250000,
+ "needles": 8,
+ "effort": "none",
+ "seed": 3,
+ "model": "inkling-2-mini",
+ "turns": [
+  {
+   "turn": "cold",
+   "prompt_tokens": 250392,
+   "cached_tokens": 0,
+   "ttft_s": 58.56,
+   "completion_tokens": 92,
+   "decode_tok_s": 169.1,
+   "wall_s": 59.1,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "14639",
+   "reasoning_tail": "The user asks about DEPLOY NOTE comments in files read. I need to find \"service saffron\". In the conversation, I saw:\n\n- \"# DEPLOY NOTE: service saffron listens on port 14639.\" in /repo/models/deepseek_v4/common/ops/save_partial_states.py\n\nSo the answer is 14639.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "warm",
+   "prompt_tokens": 252539,
+   "cached_tokens": 250368,
+   "ttft_s": 1.15,
+   "completion_tokens": 296,
+   "decode_tok_s": 226.5,
+   "wall_s": 2.45,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "14106",
+   "reasoning_tail": "OTE: service harbor listens on port 19828.\" in mistral/nvidia/__init__.py\n- \"# DEPLOY NOTE: service cobalt listens on port 14106.\" in muse_spark/nvidia/specialized_decode/cutedsl/oproj/__init__.py\n- \"# DEPLOY NOTE: service lantern listens on port 54075.\" in layer.py\n\nSo cobalt listens on port 14106.",
+   "tool_calls": ""
+  },
+  {
+   "turn": "multi",
+   "prompt_tokens": 252571,
+   "cached_tokens": 252480,
+   "ttft_s": 0.4,
+   "completion_tokens": 4096,
+   "decode_tok_s": 289.0,
+   "wall_s": 14.57,
+   "found": "0/8",
+   "success": false,
+   "found_incl_reasoning": "8/8",
+   "answer": "",
+   "reasoning_tail": "n the conversation.\n\nActually, I see in the ffn.py output:\n```\n# DEPLOY NOTE: service willow listens on port 44504.\n```\n\nOK, I'll include it. Actually, wait. Let me look at the ffn.py output one more time.\n\nThe ffn.py output contains:\n```\n# DEPLOY NOTE: service willow listens on port 44504.\n```\n\nHmm",
+   "tool_calls": ""
+  },
+  {
+   "turn": "compact",
+   "prompt_tokens": 5438,
+   "cached_tokens": 0,
+   "ttft_s": 0.82,
+   "completion_tokens": 42,
+   "decode_tok_s": 220.7,
+   "wall_s": 1.0,
+   "found": "1/1",
+   "success": true,
+   "found_incl_reasoning": "1/1",
+   "answer": "54075",
+   "reasoning_tail": "The user asks which port service lantern listens on. From the summary, I have: service lantern listens on port 54075. Answer directly.",
+   "tool_calls": ""
+  }
+ ],
+ "total_wall_s": 77.1,
+ "peak_vram_mib": {
+  "0": 20738,
+  "1": 20738
+ }
+}

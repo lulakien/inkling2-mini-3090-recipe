@@ -184,6 +184,15 @@ output diverges from bf16 within the first 18-584 characters (8 greedy prompts, 
 the reasoning rewords its first sentence). Task metrics do not move (MMLU 911 vs 912, needles at 255K and 262K found at 5% and 90%, 8/8
 deterministic).
 
+### On 2 GPUs (`PROFILE=512k` / `1m`)
+
+`SCONV_TAIL=1` is worth more than FP8 KV on two cards: at MAXLEN 262144 the pool grows 302K -> 483K with no speed
+change, against 302K -> 440K and a ~45% slower long prefill for FP8. With async scheduling off as well, 524,288 fits
+in bf16 (pool 535,422) at the default GMU 0.97. For 1M, FP8 + the tail + the single-GPU knobs (GMU 1.0, 512 MiB
+margin, 2 sequences, CUDA graphs to 16, 1024-token chunks, 64-row prompt logprobs, `NONTORCH_MB=256`, host
+embedding) give 1,325,310 tokens; without the knobs vLLM estimated 906K-949K. Full matrix, including the varloop
+checkpoint with shared KV and the second-agent test: `experiments/long-context-2gpu/RESULTS.md`.
+
 ## 7. Tried and rejected (measured)
 
 - Adaptive DSpark verify: needs varlen-graph overlays; break-even at batch 1 and temp-0 output not reproducible.
