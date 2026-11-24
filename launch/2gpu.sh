@@ -5,6 +5,8 @@
 #         its in-flight copy (pool ~535K). Same decode and prefill speed as 262k; 500K cold prompt ~167 s.
 #   1m:   1,048,576 tokens with FP8 KV + SCONV_TAIL and the single-GPU memory knobs (pool ~1.33M, 2 sequences).
 #         Software FP8 on Ampere makes long prefill slow: a 1.04M-token cold prompt took 19.5 min; 250K 102 s vs 59 s.
+#         Opt-in, faster: MNBT=2048 FAR_ATTN=1 PROFILE=1m (pool ~1.29M): 1.04M cold 14.9 min, 250K 79 s.
+#   Long prefill on 512k: FAR_ATTN=1 takes the 500K cold prompt from ~167 s to ~145 s (experiments/prefill).
 # Any serve.sh variable can be overridden, e.g. MAXLEN=131072 PORT=8001 bash launch/2gpu.sh
 set -euo pipefail
 export TP=2 GPUS="${GPUS:-all}"

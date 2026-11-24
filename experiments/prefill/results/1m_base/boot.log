@@ -1,0 +1,3 @@
+container inkling2 starting (logs: docker logs -f inkling2)
+BOOT_OK after ~45 s, serving inkling-2-mini on http://127.0.0.1:8000/v1
+WARMUP done in 31.8 s (long 9.9, extend 2.5, decode 2.5, batched 16.9)

@@ -53,6 +53,12 @@ text (4.8 vs 4.5 tokens per step on code), not from a faster step.
 | warm agent turn (cached prefix) | 250K: 1.1 s | 500K: 2.0 s | 250K: 2.0 s |
 | retrieval, MMLU | 8/8 facts at 250K, 911 | 8/8 facts at 500K, 911 | needle at 1.04M found, 912 |
 
+**Faster cold long prompts (opt-in, new):** `FAR_ATTN=1` lets the prefill attention kernel skip the relative-bias
+work on keys more than 1,024 tokens back (x1.25 on that kernel with bf16 KV, x1.15 with FP8): **500K cold 167 s -> ~145 s** (4 runs: 144-146 s)
+on `512k`. On `1m`, `MNBT=2048` also lets the copy-engine prefill pipeline run (its 1024-token chunks were below the
+pipeline's minimum); the two together take **1.04M cold from 19.5 min to 14.9 min** (250K: 102 s -> 79 s; pool 1.29M).
+Not bit-identical: fp32-rounding-level differences, retrieval unchanged (`experiments/prefill/RESULTS.md`).
+
 A second agent joining a long-running one stalls the first to ~11 tok/s while its own prompt prefills (11-18 s for
 64K), then both decode at about three quarters of the single-stream speed.
 
@@ -103,6 +109,7 @@ hf download thinkingmachines/Inkling-2-Mini --revision ed40e7da625f594fc9c4990f5
 bash launch/2gpu.sh                    # two GPUs, 262K context
 PROFILE=512k bash launch/2gpu.sh       # two GPUs, 512K context, bf16 KV (same speed)
 PROFILE=1m bash launch/2gpu.sh         # two GPUs, 1M context, FP8 KV (cold 1M prompt ~20 min)
+FAR_ATTN=1 MNBT=2048 PROFILE=1m bash launch/2gpu.sh   # opt-in faster long prefill (cold 1M ~15 min)
 bash launch/1gpu.sh                    # one GPU (GPU=0|1), 128K context
 PROFILE=262k bash launch/1gpu.sh       # one GPU, 262K context, FP8 KV (slower long prompts)
 ```
@@ -239,7 +246,8 @@ unlock while the module stays loaded (seen here once: 64 instead of 91 TFLOPS, p
   untested (try a smaller `MAXLEN` and `GMU` below 1.0). Another process using the GPU (even one that doesn't show in `nvidia-smi`, such as a
   game) also slows every number here.
 - **The 2-GPU `1m` profile is for one long session that stays warm.** Its FP8 KV is converted in software, so a cold
-  1.04M-token prompt takes 19.5 min (250K: 102 s vs 59 s on the default). `512k` keeps bf16 and full prefill speed.
+  1.04M-token prompt takes 19.5 min (250K: 102 s vs 59 s on the default; 14.9 min with the opt-in
+  `FAR_ATTN=1 MNBT=2048`). `512k` keeps bf16 and full prefill speed.
   Retrieval was checked with planted facts up to 1.04M, which is easier than multi-needle benchmarks like MRCR.
 - **Not shipped:** the varloop research checkpoint (`LOOP_SHARE=1` works and halves its attention KV, but it scores
   19-20 MMLU questions below Inkling 2 Mini here) and 2DSD (its Inkling runner does not fit one 24 GB card yet).

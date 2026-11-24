@@ -1,0 +1,34 @@
+{
+ "ctx": 65536,
+ "effort": "medium",
+ "reason": {
+  "tokens": 2500,
+  "ttft_s": 0.15,
+  "decode_tok_s": 181.5,
+  "cached": 64960,
+  "reasoning_chars": 5556,
+  "answer_chars": 3052,
+  "tokens_per_step": 2.61,
+  "ms_per_step": 14.36
+ },
+ "code": {
+  "tokens": 2500,
+  "ttft_s": 0.15,
+  "decode_tok_s": 251.3,
+  "cached": 64960,
+  "reasoning_chars": 349,
+  "answer_chars": 7616,
+  "tokens_per_step": 3.61,
+  "ms_per_step": 14.37
+ },
+ "edit": {
+  "tokens": 2500,
+  "ttft_s": 0.15,
+  "decode_tok_s": 259.4,
+  "cached": 64960,
+  "reasoning_chars": 7134,
+  "answer_chars": 0,
+  "tokens_per_step": 3.78,
+  "ms_per_step": 14.57
+ }
+}

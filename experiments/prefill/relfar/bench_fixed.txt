@@ -1,0 +1,18 @@
+FP8=False PAST=65536 splits=5 shipped: 12.56 ms 67.7 TFLOPS
+overlay, far path off: 12.28 ms, bit-identical to shipped: True
+{"FAR": true}                                       9.87 ms   86.2 TFLOPS  x1.273  maxdiff 4.79e-06 (rel 1.4e-04), bit-identical False
+FP8=False PAST=253952 splits=5 shipped: 49.74 ms 64.8 TFLOPS
+overlay, far path off: 50.19 ms, bit-identical to shipped: True
+{"FAR": true}                                      39.92 ms   80.7 TFLOPS  x1.246  maxdiff 2.41e-06 (rel 1.3e-04), bit-identical False
+FP8=False PAST=483328 splits=5 shipped: 94.53 ms 64.6 TFLOPS
+overlay, far path off: 95.40 ms, bit-identical to shipped: True
+{"FAR": true}                                      74.81 ms   81.6 TFLOPS  x1.264  maxdiff 1.40e-06 (rel 9.6e-05), bit-identical False
+FP8=True PAST=65536 splits=5 shipped: 25.96 ms 32.8 TFLOPS
+overlay, far path off: 25.90 ms, bit-identical to shipped: True
+{"FAR": true}                                      23.08 ms   36.8 TFLOPS  x1.125  maxdiff 1.10e-06 (rel 7.3e-05), bit-identical False
+FP8=True PAST=253952 splits=5 shipped: 99.33 ms 32.4 TFLOPS
+overlay, far path off: 99.34 ms, bit-identical to shipped: True
+{"FAR": true}                                      86.48 ms   37.2 TFLOPS  x1.149  maxdiff 4.04e-07 (rel 5.9e-05), bit-identical False
+FP8=True PAST=483328 splits=5 shipped: 188.57 ms 32.4 TFLOPS
+overlay, far path off: 188.66 ms, bit-identical to shipped: True
+{"FAR": true}                                     163.97 ms   37.2 TFLOPS  x1.150  maxdiff 2.37e-07 (rel 4.9e-05), bit-identical False

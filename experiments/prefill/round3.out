@@ -1,0 +1,6 @@
+VLLM_CEAR_TAIL_MAX_PIECES=4
+INKLING2_FAR_ATTN=1
+VLLM_CEAR_TAIL_PIECE_ROWS=512
+{"prompt_tokens": 16384, "needle_at": 8167, "seconds": 2.4, "prefill_tok_s": 6745, "answer": " 7429-ORCHID.\n# ====", "found": true}
+{"prompt_tokens": 500000, "needle_at": 249975, "seconds": 147.3, "prefill_tok_s": 3394, "answer": " 7429-ORCHID.\n\nQuestion: according", "found": true}
+== done3

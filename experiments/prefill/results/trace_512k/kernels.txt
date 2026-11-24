@@ -1,0 +1,42 @@
+== dp0_pp0_tp0_dcp0_ep0_rank0.1795542190622919156.pt.trace.json: 6380 GPU ops, wall span 2113 ms, GPU busy 2192 ms
+     1547.4 ms  70.6%  full attention (Inkling prefill kernel)
+      292.4 ms  13.3%  communication (all-reduce / copies)
+      240.4 ms  11.0%  experts / MoE GEMM
+       46.6 ms   2.1%  short conv / mix / attn_res
+       35.6 ms   1.6%  other
+       19.3 ms   0.9%  norms / elementwise
+        9.9 ms   0.5%  dense GEMM (cuBLAS / W8)
+  top kernels:
+     1539.9 ms  70.3%  x96    _rel_attention_kernel
+      146.9 ms   6.7%  x388   Memcpy DtoH (Device -> Pinned)
+      136.9 ms   6.2%  x388   Memcpy HtoD (Pinned -> Device)
+      103.4 ms   4.7%  x176   void humming<MmaOpClass, Shape<0u, 2304u, 2304u>, Shape<32u, 256u, 64u>, Shape<32u, 32u, 64u>, Shape<0u, 0u, 0
+       55.7 ms   2.5%  x176   void humming<MmaOpClass, Shape<0u, 2304u, 1152u>, Shape<32u, 256u, 64u>, Shape<32u, 32u, 64u>, Shape<0u, 0u, 0
+       30.8 ms   1.4%  x152   void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_256x128_32x3_tn_align8>(cutlass_80_tensoro
+       20.0 ms   0.9%  x434   _attn_res_2pass_kernel
+       18.2 ms   0.8%  x144   _blend_rms_norm_kernel
+       14.5 ms   0.7%  x40    void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_128x128_32x5_tn_align8>(cutlass_80_tensoro
+       11.4 ms   0.5%  x144   _pair_rms_norm_kernel
+       11.0 ms   0.5%  x192   _swiglu_kernel
+       10.8 ms   0.5%  x16    void humming<MmaOpClass, Shape<0u, 2304u, 2304u>, Shape<32u, 256u, 64u>, Shape<32u, 32u, 64u>, Shape<0u, 0u, 0
+== dp0_pp0_tp1_dcp0_ep1_rank1.1795542190624063654.pt.trace.json: 6366 GPU ops, wall span 2113 ms, GPU busy 2250 ms
+     1597.8 ms  71.0%  full attention (Inkling prefill kernel)
+      288.9 ms  12.8%  communication (all-reduce / copies)
+      250.7 ms  11.1%  experts / MoE GEMM
+       47.1 ms   2.1%  short conv / mix / attn_res
+       36.3 ms   1.6%  other
+       19.3 ms   0.9%  norms / elementwise
+       10.3 ms   0.5%  dense GEMM (cuBLAS / W8)
+  top kernels:
+     1590.2 ms  70.7%  x96    _rel_attention_kernel
+      144.0 ms   6.4%  x388   Memcpy DtoH (Device -> Pinned)
+      136.8 ms   6.1%  x388   Memcpy HtoD (Pinned -> Device)
+      108.0 ms   4.8%  x176   void humming<MmaOpClass, Shape<0u, 2304u, 2304u>, Shape<32u, 256u, 64u>, Shape<32u, 32u, 64u>, Shape<0u, 0u, 0
+       58.2 ms   2.6%  x176   void humming<MmaOpClass, Shape<0u, 2304u, 1152u>, Shape<32u, 256u, 64u>, Shape<32u, 32u, 64u>, Shape<0u, 0u, 0
+       32.1 ms   1.4%  x152   void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_256x128_32x3_tn_align8>(cutlass_80_tensoro
+       20.2 ms   0.9%  x434   _attn_res_2pass_kernel
+       18.2 ms   0.8%  x144   _blend_rms_norm_kernel
+       15.2 ms   0.7%  x40    void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_128x128_32x5_tn_align8>(cutlass_80_tensoro
+       11.4 ms   0.5%  x144   _pair_rms_norm_kernel
+       11.2 ms   0.5%  x192   _swiglu_kernel
+       11.2 ms   0.5%  x16    void humming<MmaOpClass, Shape<0u, 2304u, 2304u>, Shape<32u, 256u, 64u>, Shape<32u, 32u, 64u>, Shape<0u, 0u, 0

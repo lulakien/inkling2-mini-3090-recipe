@@ -77,6 +77,13 @@ TP2 prefill is PCIe-bound: before these patches NCCL all-reduce was 41% of each 
   piece *i+1* computes. +5.9% at 16K, -9% time at 255K.
 - **Split-KV full attention** (`ATTN_SPLITK=5`, in `inkling2_attention.py`): long prompts had 196 CTAs = 2.4 waves
   on 82 SMs. -9% time at 255K, no change at 16-32K.
+- **Far-block fast path** (`FAR_ATTN=1`, opt-in, `attention_sm90.py`): at 485K depth the full-attention prefill
+  kernel was 71% of GPU time (93.5 ms per layer visit, ~64 TFLOPS). The relative bias only reaches 1,024 keys back,
+  but the kernel ran the bias load and distance masks on every key block. A first loop now covers the blocks wholly
+  before every row's bias extent (no bias, no masks), then the unchanged loop runs the rest; same splits and online
+  softmax, no second kernel or merge. x1.25-1.27 bf16 (= FA2 on the same shape), x1.13-1.15 FP8 (bound by the
+  software E4M3 decode); 500K cold 167 -> ~145 s (4 runs, 144-146 s). Output differs from the shipped kernel at fp32 rounding level
+  (max relative 1.4e-4); with the switch off the kernel is bit-identical to the shipped one.
 - **Parallel MoE align** (`ALIGN_MODE=auto`): 193 -> 42 us per align at 8192 routes; 35/35 cases `torch.equal`.
 - **2-pass attn_res** (`ATTN_RES_2PASS=1`): sources read twice instead of three times; 72/72 cases `torch.equal`.
   The last two together: +3.4% (1 GPU), +7.5% (2 GPUs, bigger chunks).
@@ -208,6 +215,11 @@ checkpoint with shared KV and the second-agent test: `experiments/long-context-2
 - Full-attention BLOCK_M=64 (0.84x), tail pipeline with 3 pieces (-2%), host all-reduce launch-config sweep (shipped
   4x256 already optimal), dense Marlin (no sm_86 build in this image), skinny GEMM on big projections.
 - `--max-num-batched-tokens 4096` at TP2: the startup KV check fails at 262K.
+- Tail pipeline in 4 x 512-row pieces with `FAR_ATTN=1`: 500K cold 147 s vs 144-146 s (MoE GEMMs lose more at 512 rows).
+- Prefill attention tile sweep for the far path (BLOCK_N 32/128, 4 warps, BLOCK_M 64, 3 stages): all slower or over
+  the 99 KB shared-memory limit; 128 x 64, 8 warps, 2 stages stays.
+- DSpark k=4 at one stream (warm 64K agent turns): 227 vs 245 tok/s for k=7 (steps 7% cheaper, 14% fewer tokens
+  accepted; code turns -15%).
 - `draft_lm_head_quantization`: vLLM only allows it for DeepSeek drafters.
 - `expandable_segments`: worse fragmentation for the single-GPU fit.
 - Sequence-parallel prefill path in the model: needs NVLink symmetric memory.
@@ -219,4 +231,5 @@ checkpoint with shared KV and the second-agent test: `experiments/long-context-2
 Speculative decoding at temp 0 is not token-identical to plain greedy decoding (bf16 verify numerics differ by batch
 shape), so losslessness is judged by task metrics: sequential MMLU letter accuracy (57 subjects x 20), long-context
 needle retrieval and temp-0 run-to-run determinism. Host all-reduce/all-gather: 0/1140 MMLU answer differences on vs
-off. The two prefill kernels are bit-identical to the stock ones (`tests/kernels`).
+off. The two prefill kernels are bit-identical to the stock ones (`tests/kernels`). The opt-in `FAR_ATTN=1` is not:
+it differs from the shipped attention kernel at fp32 rounding level (`experiments/prefill/relfar/bench.py`).

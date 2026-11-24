@@ -1,0 +1,19 @@
+== base
+(APIServer pid=1) WARNING 11-24 18:02:11 [interface.py:1691] Unknown vLLM environment variable detected: VLLM_CEAR_TAIL_STAGE
+[cear_tail] prefill tail pipeline installed: stage 2, 1536+ tokens, 1024-row pieces (max 2)
+[cear_tail] prefill tail pipeline installed: stage 2, 1536+ tokens, 1024-row pieces (max 2)
+(EngineCore pid=121) INFO 11-24 18:02:43 [kv_cache_utils.py:1134] GPU KV cache size: 1,324,318 tokens, Maximum concurrency for 1,048,576 tokens per request: 1.26x
+{"prompt_tokens": 250000, "needle_at": 124975, "seconds": 100.6, "prefill_tok_s": 2485, "answer": " 7429-ORCHID.\n        gate", "found": true}
+== mnbt2048
+(APIServer pid=1) WARNING 11-24 18:05:05 [interface.py:1691] Unknown vLLM environment variable detected: VLLM_CEAR_TAIL
+[cear_tail] prefill tail pipeline installed: stage 2, 1536+ tokens, 1024-row pieces (max 2)
+[cear_tail] prefill tail pipeline installed: stage 2, 1536+ tokens, 1024-row pieces (max 2)
+(EngineCore pid=120) INFO 11-24 18:05:29 [kv_cache_utils.py:1134] GPU KV cache size: 1,290,023 tokens, Maximum concurrency for 1,048,576 tokens per request: 1.23x
+{"prompt_tokens": 250000, "needle_at": 124975, "seconds": 85.5, "prefill_tok_s": 2923, "answer": " 7429-ORCHID.\n        gate", "found": true}
+== mnbt2048_far
+(APIServer pid=1) WARNING 11-24 18:07:31 [interface.py:1691] Unknown vLLM environment variable detected: VLLM_CEAR_TAIL
+[cear_tail] prefill tail pipeline installed: stage 2, 1536+ tokens, 1024-row pieces (max 2)
+[cear_tail] prefill tail pipeline installed: stage 2, 1536+ tokens, 1024-row pieces (max 2)
+(EngineCore pid=120) INFO 11-24 18:08:06 [kv_cache_utils.py:1134] GPU KV cache size: 1,290,023 tokens, Maximum concurrency for 1,048,576 tokens per request: 1.23x
+{"prompt_tokens": 250000, "needle_at": 124975, "seconds": 79.1, "prefill_tok_s": 3159, "answer": " 7429-ORCHID.\n        gate", "found": true}
+== done4

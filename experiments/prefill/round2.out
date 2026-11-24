@@ -1,0 +1,23 @@
+== far 512k
+INKLING2_FAR_ATTN=1
+{"prompt_tokens": 500000, "needle_at": 249975, "seconds": 144.3, "prefill_tok_s": 3464, "answer": " 7429-ORCHID.\n                   ", "found": true}
+{"prompt_tokens": 500000, "needle_at": 49995, "seconds": 145.7, "prefill_tok_s": 3431, "answer": " 7429-ORCHID.\n                   ", "found": true}
+{"prompt_tokens": 16384, "needle_at": 8167, "seconds": 2.4, "prefill_tok_s": 6916, "answer": " 7429-ORCHID.\n# ====", "found": true}
+(APIServer pid=1) INFO 11-24 17:49:08 [loggers.py:347] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, Finished: 0 reqs, GPU KV cache usage: 15.4%, Prefix cache hit rate: 5.9%
+(APIServer pid=1) INFO 11-24 17:51:28 [loggers.py:347] Engine 000: Avg prompt throughput: 50000.9 tokens/s, Avg generation throughput: 1.2 tokens/s, Running: 1 reqs, Waiting: 0 reqs, Finished: 1 reqs, GPU KV cache usage: 9.6%, Prefix cache hit rate: 3.2%
+(APIServer pid=1) INFO 11-24 17:51:38 [loggers.py:347] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, Finished: 0 reqs, GPU KV cache usage: 19.8%, Prefix cache hit rate: 3.2%
+== warm decode k=7
+reason {"tokens": 2500, "ttft_s": 0.15, "decode_tok_s": 175.1, "cached": 64960, "reasoning_chars": 5107, "answer_chars": 3379, "tokens_per_step": 2.71, "ms_per_step": 15.45}
+code {"tokens": 2500, "ttft_s": 0.15, "decode_tok_s": 299.3, "cached": 64960, "reasoning_chars": 349, "answer_chars": 6950, "tokens_per_step": 4.64, "ms_per_step": 15.49}
+edit {"tokens": 1940, "ttft_s": 0.15, "decode_tok_s": 238.2, "cached": 64960, "reasoning_chars": 2610, "answer_chars": 3001, "tokens_per_step": 3.7, "ms_per_step": 15.51}
+reason {"tokens": 2500, "ttft_s": 1.23, "decode_tok_s": 213.0, "cached": 65024, "reasoning_chars": 3859, "answer_chars": 3886, "tokens_per_step": 3.31, "ms_per_step": 15.52}
+code {"tokens": 2500, "ttft_s": 0.13, "decode_tok_s": 280.7, "cached": 65024, "reasoning_chars": 1879, "answer_chars": 6012, "tokens_per_step": 4.34, "ms_per_step": 15.46}
+edit {"tokens": 2500, "ttft_s": 0.09, "decode_tok_s": 266.9, "cached": 65024, "reasoning_chars": 7081, "answer_chars": 0, "tokens_per_step": 4.2, "ms_per_step": 15.71}
+== warm decode k=4
+reason {"tokens": 2500, "ttft_s": 0.15, "decode_tok_s": 181.5, "cached": 64960, "reasoning_chars": 5556, "answer_chars": 3052, "tokens_per_step": 2.61, "ms_per_step": 14.36}
+code {"tokens": 2500, "ttft_s": 0.15, "decode_tok_s": 251.3, "cached": 64960, "reasoning_chars": 349, "answer_chars": 7616, "tokens_per_step": 3.61, "ms_per_step": 14.37}
+edit {"tokens": 2500, "ttft_s": 0.15, "decode_tok_s": 259.4, "cached": 64960, "reasoning_chars": 7134, "answer_chars": 0, "tokens_per_step": 3.78, "ms_per_step": 14.57}
+reason {"tokens": 2500, "ttft_s": 0.14, "decode_tok_s": 208.8, "cached": 65024, "reasoning_chars": 3902, "answer_chars": 3915, "tokens_per_step": 3.01, "ms_per_step": 14.4}
+code {"tokens": 2500, "ttft_s": 0.13, "decode_tok_s": 249.6, "cached": 65024, "reasoning_chars": 1458, "answer_chars": 6410, "tokens_per_step": 3.58, "ms_per_step": 14.34}
+edit {"tokens": 2500, "ttft_s": 0.09, "decode_tok_s": 211.8, "cached": 65024, "reasoning_chars": 7706, "answer_chars": 0, "tokens_per_step": 3.05, "ms_per_step": 14.36}
+== done

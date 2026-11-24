@@ -14,11 +14,16 @@ of the rows' visible range, so a split count that depends only on the batch
 holds for every replay of a CUDA graph.
 """
 
+import os
+
 import torch
 
 from vllm.triton_utils import tl, triton
 
 from .e4m3 import e4m3_decode
+
+# Opt-in (recipe experiment): key blocks wholly past the relative extent skip the bias and masks.
+_FAR = os.environ.get("INKLING2_FAR_ATTN", "0") == "1"
 
 # The query tile of tml_fa4 that shears the relative logits.
 _SHEAR_TILE = tl.constexpr(128)
@@ -92,6 +97,7 @@ def _rel_attention_kernel(
     MODE: tl.constexpr,
     BLOCK_M: tl.constexpr,
     BLOCK_N: tl.constexpr,
+    FAR: tl.constexpr = False,
 ):
     TOKENS: tl.constexpr = BLOCK_M // G
     E_PAD: tl.constexpr = E + 256
@@ -147,7 +153,32 @@ def _rel_attention_kernel(
     acc = tl.zeros([BLOCK_M, D], tl.float32)
     block_table = BlockTable + req.to(tl.int64) * stride_bt
     kv_off = kv_head * stride_kv_h
-    for i in range(num_iters):
+    num_far = 0
+    if FAR and not DRAFT and WINDOW == 0:
+        # Key blocks wholly before every row's relative extent: all visible, all valid, no bias.
+        n_far = tl.maximum(pos_lo - E + 1, 0) // BLOCK_N
+        num_far = tl.minimum(tl.maximum(n_far - n_lo - split + num_splits - 1, 0) // num_splits, num_iters)
+        for i in range(num_far):
+            n = n_lo + split + i * num_splits
+            keys = n * BLOCK_N + tl.arange(0, BLOCK_N)
+            page = tl.load(block_table + keys // PAGE)
+            kv_ptrs = page.to(tl.int64) * stride_kv_blk + (keys % PAGE) * stride_kv_slot + kv_off
+            if K.dtype.element_ty.primitive_bitwidth == 8:
+                k = _load_fp8_kv(K, kv_ptrs, keys < seqlen_k, q.dtype, D).T
+            else:
+                k = tl.load(K + kv_ptrs[None, :] + offs_d[:, None])
+            s = tl.dot(q, k) * qk_scale
+            m_new = tl.maximum(m_i, tl.max(s, 1))
+            alpha = tl.exp2(m_i - m_new)
+            p = tl.exp2(s - m_new[:, None])
+            l_i = l_i * alpha + tl.sum(p, 1)
+            if V.dtype.element_ty.primitive_bitwidth == 8:
+                v = _load_fp8_kv(V, kv_ptrs, keys < seqlen_k, q.dtype, D)
+            else:
+                v = tl.load(V + kv_ptrs[:, None] + offs_d[None, :])
+            acc = acc * alpha[:, None] + tl.dot(p.to(v.dtype), v)
+            m_i = m_new
+    for i in range(num_far, num_iters):
         n = n_lo + split + i * num_splits
         keys = n * BLOCK_N + tl.arange(0, BLOCK_N)
         key_valid = keys < seqlen_k
@@ -337,4 +368,5 @@ def rel_attention(
         BLOCK_N=64 if block_m >= 128 else 128 if block_m <= 32 else 64,
         num_warps=8 if block_m >= 128 else 4,
         num_stages=2,
+        FAR=_FAR,
     )

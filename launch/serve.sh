@@ -17,6 +17,9 @@
 #   HOSTAR=0    TP2 small all-reduce/all-gather through mapped host memory off        [1]
 #   CEAR=0      TP2 prefill all-reduce on the copy engines off                        [1]
 #   ATTN_SPLITK full-attention prefill split-KV (0 = shipped kernel)                  [5]
+#   FAR_ATTN=1  prefill attention skips the relative-bias work on key blocks more than 1024 tokens back:
+#               x1.25 (bf16) / x1.15 (fp8) on that kernel, 500K cold 167 -> ~145 s; fp32-rounding-level
+#               differences, not bit-identical (see experiments/prefill)                    [0]
 #   ALIGN_MODE  MoE align: auto (parallel kernel for >=2048 routes) | legacy          [auto]
 #   ATTN_RES_2PASS=0  stock 3-pass attn_res prefill kernel                            [1]
 #   EMBED_HOST=1      input embedding table in pinned host memory (1-GPU profiles)    [0]
@@ -101,7 +104,7 @@ docker run -d --name "$NAME" --gpus "${GPUS:-all}" --ipc=host \
   -e VLLM_INKLING_W8="${W8-attn,head,markov,draft}" \
   -e VLLM_HOST_ALLREDUCE="${HOSTAR:-1}" -e HOSTAR_BUILD_DIR=/root/.cache/hostar-build \
   -e VLLM_CEAR="$CEAR" -e VLLM_CEAR_TAIL="$CEAR" -e VLLM_CEAR_TAIL_STAGE=2 \
-  -e VLLM_ATTN_SPLITK="${ATTN_SPLITK:-5}" -e VLLM_ALIGN_MODE="${ALIGN_MODE:-auto}" \
+  -e VLLM_ATTN_SPLITK="${ATTN_SPLITK:-5}" -e INKLING2_FAR_ATTN="${FAR_ATTN:-0}" -e VLLM_ALIGN_MODE="${ALIGN_MODE:-auto}" \
   -e VLLM_ATTN_RES_2PASS="${ATTN_RES_2PASS:-1}" -e VLLM_SCONV_TAIL="${SCONV_TAIL:-0}" -e VLLM_INKLING_EMBED_HOST="${EMBED_HOST:-0}" \
   -e VLLM_PROMPT_LOGPROB_CHUNK="${PLP_CHUNK:-1024}" ${KV_MARGIN_MB:+-e VLLM_KV_MARGIN_FLOOR_MB=$KV_MARGIN_MB} \
   ${NONTORCH_MB:+-e VLLM_KV_NON_TORCH_RESERVE_MB=$NONTORCH_MB} \
