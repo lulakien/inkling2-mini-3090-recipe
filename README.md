@@ -29,7 +29,7 @@ Same machine and checkpoint for every column. Batch 1 unless noted. Temp 0, reas
 | prefill tok/s at 2K / 16K / 64K | 7,480 / 7,140 / 6,280 | 5,800 / 5,280 / 4,360 | 5,420 / 4,640 / 3,370 |
 | prefill, near max context | 4,270 tok/s (254K in 59 s) | 3,580 tok/s (127K in 35 s) | 1,650 tok/s (254K in 154 s) |
 | agent turn: 13K prompt sharing a prefix with the previous one | 0.12 s (cold 1.9 s) | 0.19 s (cold 2.5 s) | 0.23 s (cold 2.8 s) |
-| 2 / 4 / 8 concurrent streams, total tok/s | 260 / 339 / 445 | 185 / 256 / - | 190 / 248 / 251 (4 at a time) |
+| 2 / 4 / 8 concurrent streams, total tok/s | 250 / 426 / **580** | 211 / 317 / - | 190 / 248 / 251 (4 at a time, k=7) |
 | needle in haystack (5% and 90% depth) | 255K: both found | 128K: both found | 255K and 262K: both found |
 | MMLU, 57 subjects x 20, letter logits | 911 / 1140 (79.9%) | 912 / 1140 (80.0%) | 911 / 1140 (79.9%) |
 | OpenAI API checks (`tests/api_smoke.py`) | 9/9 (+ image 10/10 with `MM=1`) | 9/9 | 9/9 |
@@ -80,9 +80,13 @@ run, with every speed switch off):
 323 / 170 / 129 tok/s (+3%), prefill 2K / 16K / 64K 7,840 / 7,480 / 6,620 tok/s (+5%), cards at ~339 W,
 peak 75 C. Not worth the extra heat for daily use here, so the published numbers stay at 280 W.
 
-Serving many users at once? Speculation stops paying off at about 4 concurrent streams. With `SPEC=0` (2 GPUs):
-single stream 130 tok/s, and 2 / 4 / 8 streams give 207 / 348 / **557** tok/s total, versus 260 / 339 / 445 with
-speculation on.
+Serving several users at once: the draft length now shrinks with the batch (k=7 for one stream, 4 / 2 / 1 for
+2 / 3-4 / 5+), so speculation keeps the single-stream speed and no longer costs throughput when many streams share a
+step. 2 GPUs, total tok/s at 1 / 2 / 3 / 4 / 6 / 8 streams: 196 / 250 / 359 / 426 / 493 / **580**, against
+167 / 227 / - / 296 / - / 429 with a fixed k=7 and 127 / 205 / - / 349 / - / 545 with no speculation (same session).
+One GPU: 211 / 317 tok/s at 2 / 4 streams (fixed k=7: 191 / 265). The post-boot warm-up now also covers batched
+shapes, so the first burst of users no longer waits on kernel compiles. Details and the TTFT trade-off of a second
+agent (`LPT`): [`experiments/concurrency/RESULTS.md`](experiments/concurrency/RESULTS.md).
 
 ## Quick start
 
@@ -188,7 +192,7 @@ the [single-3090 vLLM fork](https://github.com/Hiutaky/vllm/tree/ampere-port), q
 | [#1](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/1) | short-conv cache holds only each step's tail (window + drafts + one 64-token block), not the whole prefill chunk | ~1.7 GiB more KV per request on 1 GPU, bigger prefill chunks | **done** (`SCONV_TAIL=1`, 1-GPU profiles) |
 | [#2](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/2) | FP8 E4M3 KV cache, emulated on sm_86 (the model is built for a unit-scale FP8 cache) | ~2x context on both profiles | **done** (`KV_DTYPE=fp8`; 1 GPU: 262K; 2 GPUs: the `1m` profile) |
 | [#3](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/3) | more 2-GPU context: async off + larger `MAXLEN` (~3 GiB per card is unused at 262K) | 262K -> ~400K+ | **done** (`PROFILE=512k` bf16, `PROFILE=1m` FP8; see the long-context table) |
-| [#4](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/4) | multi-request throughput: decode attention split count, adaptive draft length, sm_86 expert-GEMM configs, more `MAXSEQS` | today 445 tok/s at 8 streams vs 690-750 in other ports | after 1-2 |
+| [#4](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/4) | multi-request throughput: decode attention split count, adaptive draft length, sm_86 expert-GEMM configs, more `MAXSEQS` | 445 -> 580 tok/s at 8 streams (others report 690-750) | **in progress**: draft length by batch size done (`SPEC_SCHED`); attention splits, GEMM configs, `MAXSEQS` open |
 | [#5](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/5) | numbers on other cards (3090 Ti, A5000, A6000, 4090), NVLink pairs, stock cards without gpu-unlock | coverage | **help wanted**: open a benchmark report (2x A40 reported, thanks buzz) |
 | [#6](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/6) | P2P via a patched open driver vs this repo's host-memory all-reduce, measured per all-reduce | 2-GPU decode | help wanted |
 | 7 | rebase onto upstream Ampere support once vllm#69165 ships | less patching | waiting |
@@ -240,7 +244,7 @@ unlock while the module stays loaded (seen here once: 64 instead of 91 TFLOPS, p
 - **Not shipped:** the varloop research checkpoint (`LOOP_SHARE=1` works and halves its attention KV, but it scores
   19-20 MMLU questions below Inkling 2 Mini here) and 2DSD (its Inkling runner does not fit one 24 GB card yet).
   Both are written up in `experiments/long-context-2gpu/RESULTS.md`.
-- **Tuned for one user.** At 4+ concurrent streams use `SPEC=0`. The KV pool is shared: on one GPU, two requests
+- **Tuned for one or a few users.** Up to 8 concurrent streams on 2 GPUs (`MAXSEQS`), 4 on one GPU. The KV pool is shared: on one GPU, two requests
   can't both use 128K (or, with the 262K profile, more than ~131K each).
 - **The 262K single-GPU profile changes precision and is slower on long prompts.** Its FP8 E4M3 KV cache is
   converted in software (sm_86 has no FP8 instructions): decode steps are 3-5% slower, prefill 7% slower at 2K, 12% at
@@ -280,7 +284,8 @@ tools/      fetch_haystack.sh, gpu_summary.py, gemm_tflops.py, make_diffs.sh, en
 results/    raw JSON per profile: 2gpu, 1gpu_128k, 1gpu_262k, 2gpu_port_only, 2gpu_nospec, 2gpu_vision, kernels;
             old/ has superseded single-GPU runs (64K, 512-token 128K, development runs);
             community/ has reports from other hardware (2x A40)
-experiments/ long-context-2gpu: FP8 / SCONV_TAIL / varloop shared-KV matrix, second-agent test, 2DSD attempt
+experiments/ long-context-2gpu: FP8 / SCONV_TAIL / varloop shared-KV matrix, second-agent test, 2DSD attempt;
+            concurrency: draft length by batch size, warm-up coverage, long-prefill cap, bigger chunks
 docs/       NOTES.md: engineering notes, where the time goes, what was tried and rejected
 gpu-unlock/ how this machine keeps the unlock boot entry current (CachyOS + Limine specific)
 ```

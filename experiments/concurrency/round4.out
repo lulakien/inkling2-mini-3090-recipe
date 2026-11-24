@@ -1,0 +1,15 @@
+WARMUP done in 13.4 s (long 5.0, extend 0.5, decode 0.8, batched 7.1)
+warm2 JIT after warm-up 16, after concurrency 17
+mnbt4096_tail GPU KV cache size: 417,049 tokens, Maximum concurrency for 262,144 tokens per request: 1.59x
+mnbt4096_tail 16384 0 {'seconds': 2.2872, 'tok_s': 7163}
+mnbt4096_tail 65536 0 {'seconds': 10.3424, 'tok_s': 6337}
+mnbt4096_tail 253952 0 {'seconds': 59.1091, 'tok_s': 4296}
+mnbt4096_tail wrote experiments/concurrency/results/mnbt4096_tail/prefill.json
+mnbt2048_tail GPU KV cache size: 479,073 tokens, Maximum concurrency for 262,144 tokens per request: 1.83x
+mnbt2048_tail 16384 0 {'seconds': 2.3005, 'tok_s': 7122}
+mnbt2048_tail 65536 0 {'seconds': 10.4375, 'tok_s': 6279}
+mnbt2048_tail 253952 0 {'seconds': 59.2858, 'tok_s': 4284}
+mnbt2048_tail wrote experiments/concurrency/results/mnbt2048_tail/prefill.json
+mnbt4096 BOOT FAIL: RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+1gpu dyn {'1': (150.7, 0.05), '2': (211.4, 0.076), '3': (267.3, 0.085), '4': (316.7, 0.096)}
+1gpu k7 {'1': (150.5, 0.051), '2': (190.9, 0.076), '3': (223.4, 0.092), '4': (264.5, 0.106)}

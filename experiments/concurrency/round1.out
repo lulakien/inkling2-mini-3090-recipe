@@ -1,0 +1,16 @@
+k7 code 0.0 {'tok_s': 312.3, 'tokens': 1042, 'mean_accepted_per_step': 3.45, 'tokens_per_step': 4.45, 'ms_per_step': 14.26}
+k7 explain 0.0 {'tok_s': 164.5, 'tokens': 1057, 'mean_accepted_per_step': 1.32, 'tokens_per_step': 2.32, 'ms_per_step': 14.09}
+k7 story 0.0 {'tok_s': 124.3, 'tokens': 1500, 'mean_accepted_per_step': 0.72, 'tokens_per_step': 1.72, 'ms_per_step': 13.81}
+k7 streams {'1': (167.1, 170.0, 0.052), '2': (226.8, 133.3, 0.064), '4': (295.9, 93.6, 0.912), '8': (429.2, 59.8, 0.136)}
+nospec code 0.0 {'tok_s': 129.4, 'tokens': 1322}
+nospec explain 0.0 {'tok_s': 129.5, 'tokens': 1455}
+nospec story 0.0 {'tok_s': 129.4, 'tokens': 1500}
+nospec streams {'1': (126.6, 127.9, 0.041), '2': (204.5, 104.3, 0.087), '4': (348.7, 88.7, 0.091), '8': (545.1, 69.5, 0.139)}
+dyn_a code 0.0 {'tok_s': 313.7, 'tokens': 1042, 'mean_accepted_per_step': 3.45, 'tokens_per_step': 4.45, 'ms_per_step': 14.19}
+dyn_a explain 0.0 {'tok_s': 165.4, 'tokens': 1057, 'mean_accepted_per_step': 1.32, 'tokens_per_step': 2.32, 'ms_per_step': 14.01}
+dyn_a story 0.0 {'tok_s': 125.0, 'tokens': 1500, 'mean_accepted_per_step': 0.72, 'tokens_per_step': 1.72, 'ms_per_step': 13.73}
+dyn_a streams {'1': (168.7, 171.7, 0.053), '2': (239.0, 139.2, 0.063), '4': (399.9, 108.6, 0.084), '8': (551.3, 73.4, 0.133)}
+dyn_b code 0.0 {'tok_s': 313.7, 'tokens': 1042, 'mean_accepted_per_step': 3.45, 'tokens_per_step': 4.45, 'ms_per_step': 14.19}
+dyn_b explain 0.0 {'tok_s': 165.0, 'tokens': 1057, 'mean_accepted_per_step': 1.32, 'tokens_per_step': 2.32, 'ms_per_step': 14.04}
+dyn_b story 0.0 {'tok_s': 124.7, 'tokens': 1500, 'mean_accepted_per_step': 0.72, 'tokens_per_step': 1.72, 'ms_per_step': 13.77}
+dyn_b streams {'1': (168.4, 171.4, 0.052), '2': (226.6, 133.1, 0.064), '4': (417.4, 110.9, 0.089), '8': (540.2, 69.3, 0.181)}

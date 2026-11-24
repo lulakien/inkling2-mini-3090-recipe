@@ -1,0 +1,3 @@
+container inkling2-1gpu starting (logs: docker logs -f inkling2-1gpu)
+BOOT_OK after ~35 s, serving inkling-2-mini on http://127.0.0.1:8000/v1
+WARMUP done in 23.1 s (long 7.0, extend 0.6, decode 1.0, batched 14.5)

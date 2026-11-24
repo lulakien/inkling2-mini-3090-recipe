@@ -1,0 +1,21 @@
+{
+ "ctx_a": 200000,
+ "ctx_b": 65536,
+ "join_after_chunks": 50,
+ "a_cold_prefill_s": 43.0,
+ "b_alone_ttft_s": 10.65,
+ "a_warm_ttft_s": 43.31,
+ "a_tok_s_before_join": 178.7,
+ "a_tok_s_during_b_prefill": 16.5,
+ "a_tok_s_both_decoding": 138.5,
+ "a_tok_s_after_b_done": 175.6,
+ "a_longest_gap_s": 0.68,
+ "a_longest_gap_at_s_after_join": 6.28,
+ "b_ttft_with_a_running_s": 14.08,
+ "b_tok_s": 176.4,
+ "a_completion_tokens": 8000,
+ "b_completion_tokens": 800,
+ "a_prompt_tokens": 200156,
+ "a_cached": 0,
+ "b_prompt_tokens": 65142
+}

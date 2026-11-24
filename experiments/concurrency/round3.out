@@ -1,0 +1,26 @@
+BOOT_OK after ~40 s, serving inkling-2-mini on http://127.0.0.1:8000/v1
+WARMUP done in 10.0 s (long 5.1, extend 0.5, decode 0.8, batched 3.6)
+JIT after warm-up: 15
+default r1 {'1': (231.0, 0.041), '2': (274.0, 0.064), '3': (358.2, 0.079), '4': (423.9, 0.084), '6': (485.3, 0.101), '8': (562.0, 0.11)}
+default r2 {'1': (212.0, 0.052), '2': (293.6, 0.057), '3': (348.3, 0.076), '4': (418.2, 0.074), '6': (478.5, 0.104), '8': (565.4, 0.115)}
+JIT after concurrency: 16
+      1 _align_base_kernel
+      1 _align_prefix_kernel
+      1 _attn_res_2pass_kernel
+      1 _combine_kernel
+      1 _gumbel_sample_kernel
+      1 _k_group_kernel
+      1 _moe_align_kernel
+      1 _pack_sampler_output_kernel
+      1 _rel_attention_kernel
+      1 _rel_decode_combine_kernel
+      1 _resample_kernel
+      1 _sconv_kernel
+      1 _select_kernel
+      1 _seq_metadata_kernel
+      1 _unpack_gathered_output_kernel
+      1 _w8_kernel
+lpt0 {"ctx_a": 200000, "ctx_b": 65536, "join_after_chunks": 50, "a_cold_prefill_s": 43.0, "b_alone_ttft_s": 10.63, "a_warm_ttft_s": 43.21, "a_tok_s_before_join": 181.4, "a_tok_s_during_b_prefill": 11.7, "a_tok_s_both_decoding": 141.6, "a_tok_s_after_b_done": 177.8, "a_longest_gap_s": 0.38, "a_longest_gap_at_s_after_join": 10.22, "b_ttft_with_a_running_s": 11.0, "b_tok_s": 191.9, "a_completion_tokens": 8000, "b_completion_tokens": 800, "a_prompt_tokens": 200156, "a_cached": 0, "b_prompt_tokens": 65142}
+lpt2048 {"ctx_a": 200000, "ctx_b": 65536, "join_after_chunks": 50, "a_cold_prefill_s": 43.1, "b_alone_ttft_s": 10.65, "a_warm_ttft_s": 43.24, "a_tok_s_before_join": 182.7, "a_tok_s_during_b_prefill": 12.0, "a_tok_s_both_decoding": 141.4, "a_tok_s_after_b_done": 178.6, "a_longest_gap_s": 0.38, "a_longest_gap_at_s_after_join": 10.26, "b_ttft_with_a_running_s": 11.03, "b_tok_s": 191.6, "a_completion_tokens": 8000, "b_completion_tokens": 800, "a_prompt_tokens": 200156, "a_cached": 0, "b_prompt_tokens": 65142}
+lpt1024 {"ctx_a": 200000, "ctx_b": 65536, "join_after_chunks": 50, "a_cold_prefill_s": 43.0, "b_alone_ttft_s": 10.65, "a_warm_ttft_s": 43.31, "a_tok_s_before_join": 178.7, "a_tok_s_during_b_prefill": 16.5, "a_tok_s_both_decoding": 138.5, "a_tok_s_after_b_done": 175.6, "a_longest_gap_s": 0.68, "a_longest_gap_at_s_after_join": 6.28, "b_ttft_with_a_running_s": 14.08, "b_tok_s": 176.4, "a_completion_tokens": 8000, "b_completion_tokens": 800, "a_prompt_tokens": 200156, "a_cached": 0, "b_prompt_tokens": 65142}
+lpt512 {"ctx_a": 200000, "ctx_b": 65536, "join_after_chunks": 50, "a_cold_prefill_s": 42.7, "b_alone_ttft_s": 10.53, "a_warm_ttft_s": 42.91, "a_tok_s_before_join": 184.7, "a_tok_s_during_b_prefill": 28.3, "a_tok_s_both_decoding": 145.1, "a_tok_s_after_b_done": 181.6, "a_longest_gap_s": 0.24, "a_longest_gap_at_s_after_join": 5.78, "b_ttft_with_a_running_s": 16.23, "b_tok_s": 130.4, "a_completion_tokens": 8000, "b_completion_tokens": 800, "a_prompt_tokens": 200156, "a_cached": 0, "b_prompt_tokens": 65142}

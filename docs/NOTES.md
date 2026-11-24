@@ -57,6 +57,15 @@ Single GPU: the same step is ~18.4 ms. Experts are 8.5 ms of it at ~0.9 TB/s, th
 drafter read different hidden states, so the logits cannot be shared). Nothing large is left except
 quantizing `wo_ud` (~3%) or the LM head to int4 (~3%, needs a logits quality gate).
 
+### Several streams
+
+DSpark's draft length now follows the batch size (`SPEC_SCHED`, default k=7 / 4 / 2 / 1 for 1 / 2 / 3-4 / 5+
+streams; vLLM's `num_speculative_tokens_per_batch_size`). With a fixed k=7, 8 streams verify 64 tokens per step and
+lost to plain decoding (429 vs 545 tok/s); with the schedule 8 streams give ~575 tok/s and one stream is unchanged.
+The 1-GPU 262k profile keeps k=7: the extra CUDA graphs per draft length leave it 0.03 GiB short of 262K.
+`tests/warmup.py` also covers batched decode/sampling shapes and multi-prompt prefills, so no Triton kernel compiles
+during real requests (it was 14 on the first burst). Measurements: `experiments/concurrency/RESULTS.md`.
+
 ## 3. Prefill
 
 TP2 prefill is PCIe-bound: before these patches NCCL all-reduce was 41% of each 2048-token chunk

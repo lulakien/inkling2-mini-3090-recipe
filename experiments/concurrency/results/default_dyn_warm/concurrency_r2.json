@@ -1,0 +1,38 @@
+{
+ "1": {
+  "aggregate_tok_s": 212.0,
+  "per_stream_tok_s": 216.7,
+  "mean_ttft_s": 0.052,
+  "wall_s": 2.41
+ },
+ "2": {
+  "aggregate_tok_s": 293.6,
+  "per_stream_tok_s": 156.8,
+  "mean_ttft_s": 0.057,
+  "wall_s": 3.49
+ },
+ "3": {
+  "aggregate_tok_s": 348.3,
+  "per_stream_tok_s": 127.1,
+  "mean_ttft_s": 0.076,
+  "wall_s": 4.41
+ },
+ "4": {
+  "aggregate_tok_s": 418.2,
+  "per_stream_tok_s": 110.7,
+  "mean_ttft_s": 0.074,
+  "wall_s": 4.9
+ },
+ "6": {
+  "aggregate_tok_s": 478.5,
+  "per_stream_tok_s": 84.7,
+  "mean_ttft_s": 0.104,
+  "wall_s": 6.42
+ },
+ "8": {
+  "aggregate_tok_s": 565.4,
+  "per_stream_tok_s": 74.2,
+  "mean_ttft_s": 0.115,
+  "wall_s": 7.24
+ }
+}

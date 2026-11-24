@@ -1,0 +1,42 @@
+container inkling2 starting (logs: docker logs -f inkling2)
+BOOT_FAIL
+        *client_args,
+        renderer=renderer,
+    )
+  File "/usr/local/lib/python3.14/dist-packages/vllm/tracing/otel.py", line 175, in sync_wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.14/dist-packages/vllm/v1/engine/core_client.py", line 1198, in __init__
+    super().__init__(
+    ~~~~~~~~~~~~~~~~^
+        asyncio_mode=True,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        renderer=renderer,
+        ^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/dist-packages/vllm/v1/engine/core_client.py", line 731, in __init__
+    with launch_core_engines(
+         ~~~~~~~~~~~~~~~~~~~^
+        vllm_config, executor_class, log_stats, addresses
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as engine_launch:
+    ^
+  File "/usr/lib/python3.14/contextlib.py", line 148, in __exit__
+    next(self.gen)
+    ~~~~^^^^^^^^^^
+  File "/usr/local/lib/python3.14/dist-packages/vllm/v1/engine/utils.py", line 1409, in launch_core_engines
+    wait_for_engine_startup(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        handshake_socket,
+        ^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        launch,
+        ^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/dist-packages/vllm/v1/engine/utils.py", line 1493, in wait_for_engine_startup
+    raise RuntimeError(
+    ...<8 lines>...
+    )
+RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}

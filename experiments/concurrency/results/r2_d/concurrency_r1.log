@@ -1,0 +1,6 @@
+1 {'aggregate_tok_s': 168.4, 'per_stream_tok_s': 171.3, 'mean_ttft_s': 0.052, 'wall_s': 3.04}
+2 {'aggregate_tok_s': 251.1, 'per_stream_tok_s': 150.1, 'mean_ttft_s': 0.063, 'wall_s': 4.08}
+3 {'aggregate_tok_s': 346.7, 'per_stream_tok_s': 125.6, 'mean_ttft_s': 0.074, 'wall_s': 4.43}
+4 {'aggregate_tok_s': 418.9, 'per_stream_tok_s': 114.4, 'mean_ttft_s': 0.087, 'wall_s': 4.89}
+6 {'aggregate_tok_s': 485.0, 'per_stream_tok_s': 84.5, 'mean_ttft_s': 0.113, 'wall_s': 6.33}
+8 {'aggregate_tok_s': 555.6, 'per_stream_tok_s': 73.3, 'mean_ttft_s': 0.102, 'wall_s': 7.37}

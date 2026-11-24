@@ -1,0 +1,4 @@
+1 {'aggregate_tok_s': 168.4, 'per_stream_tok_s': 171.4, 'mean_ttft_s': 0.052, 'wall_s': 3.04}
+2 {'aggregate_tok_s': 226.6, 'per_stream_tok_s': 133.1, 'mean_ttft_s': 0.064, 'wall_s': 4.52}
+4 {'aggregate_tok_s': 417.4, 'per_stream_tok_s': 110.9, 'mean_ttft_s': 0.089, 'wall_s': 4.91}
+8 {'aggregate_tok_s': 540.2, 'per_stream_tok_s': 69.3, 'mean_ttft_s': 0.181, 'wall_s': 7.58}
