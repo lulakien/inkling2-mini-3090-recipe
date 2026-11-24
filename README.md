@@ -2,12 +2,33 @@
 
 Serve [`thinkingmachines/Inkling-2-Mini`](https://huggingface.co/thinkingmachines/Inkling-2-Mini) on **one RTX 3090
 (128K context, or 262K with an FP8 KV cache)** or **two RTX 3090s (262K context, 512K in bf16 or 1M with FP8 KV as opt-in profiles)**, PCIe only, no NVLink, no P2P,
-power-capped at 280 W, with the shipped checkpoint unchanged.
+power-capped at 280 W, with the shipped checkpoint unchanged (NVFP4 experts, bf16 rest; see
+[what precision you are running](#what-precision-you-are-running)).
 
 The official `vllm/vllm-openai:inkling-2-mini` image only supports Hopper/Blackwell. This repo has small file
 overlays (mounted read-only over that image, nothing rebuilt) that make it run on sm_86. A second set of overlays
 makes it fast there. It also has the launchers, the tests behind every number below, and the raw results.
 **No model weights are included.**
+
+## What precision you are running
+
+The official checkpoint, not a community quant. Nothing is requantized on disk; the table is what the GPU computes with.
+
+| part | in the checkpoint | how this recipe serves it |
+|---|---|---|
+| MoE experts | NVFP4 (4-bit, as Thinking Machines ships it) | the same NVFP4 bytes, read directly by the kernel; math in bf16 with fp32 accumulation (W4A16) |
+| attention qkv projections, LM head, Markov head, DSpark drafter layers | bf16 | **int8 per-channel weights by default** (converted at load, to save VRAM and bandwidth). `W8=` keeps them bf16 |
+| everything else (attention output `wo_ud`, short convs, loop mixing, norms, embedding) | bf16 | bf16 |
+| activations | | bf16, fp32 accumulation |
+| KV cache | | bf16 by default; FP8 E4M3 only on the 1-GPU `262k` and 2-GPU `1m` profiles |
+
+Quality checks, same harness for every row (1,140 MMLU questions, 57 subjects x 20, letter logits, sequential):
+**911/1140 (79.9%) as served** vs **908 with the int8 layers kept in bf16 (`W8=`)**; the model card reports 79.47% on MMLU.
+Multi-fact retrieval passes at 500K (bf16 KV, 8/8) and a single needle at 1.04M (FP8 KV). That is a sanity check, not a full
+eval: coding and long-reasoning quality have not been compared against the official H100 deployment. Opt-in switches
+that change numerics are marked where they appear (`KV_DTYPE=fp8`, `FAR_ATTN=1`). The speed comes mostly from the
+speculative drafter that ships in the checkpoint (DSpark, ~2-3x on code) and PCIe all-reduce work, not from lower
+precision.
 
 ## Results
 
