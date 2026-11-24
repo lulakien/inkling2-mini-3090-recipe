@@ -1,7 +1,7 @@
 # Inkling 2 Mini on RTX 3090s: a vLLM recipe for 1 or 2 consumer Ampere GPUs
 
 Serve [`thinkingmachines/Inkling-2-Mini`](https://huggingface.co/thinkingmachines/Inkling-2-Mini) on **one RTX 3090
-(128K context, or 262K with an FP8 KV cache)** or **two RTX 3090s (262K context)**, PCIe only, no NVLink, no P2P,
+(128K context, or 262K with an FP8 KV cache)** or **two RTX 3090s (262K context, 512K in bf16 or 1M with FP8 KV as opt-in profiles)**, PCIe only, no NVLink, no P2P,
 power-capped at 280 W, with the shipped checkpoint unchanged.
 
 The official `vllm/vllm-openai:inkling-2-mini` image only supports Hopper/Blackwell. This repo has small file
@@ -56,6 +56,14 @@ text (4.8 vs 4.5 tokens per step on code), not from a faster step.
 A second agent joining a long-running one stalls the first to ~11 tok/s while its own prompt prefills (11-18 s for
 64K), then both decode at about three quarters of the single-stream speed.
 
+**Other hardware (community reports, not re-run here):**
+
+| setup | context / KV pool | decode, code / prose | prefill | long-context check | reported by |
+|---|---|---|---|---|---|
+| 2x A40 48 GB (sm_86), TP2, vLLM built from source + these overlays, `HOSTAR=0 CEAR=0` (P2P) | 262,144 / **1,042,673** (bf16 KV) | ~250-290 / ~96-100 tok/s | ~8.8K tok/s peak | 512K with FP8 KV: 524K-token needle found in 281 s | [buzz](https://github.com/buzz), [#3](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/3#issuecomment-7109679182) ([details](results/community/2xA40_buzz.md)) |
+
+More cards are welcome: see [#5](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/5).
+
 Decode speed depends on the text because speculative decoding (DSpark, the model's own drafter) accepts more
 tokens on predictable text: about 4.5 tokens per step on code, 2.4 on technical prose, 1.75 on stories.
 
@@ -89,6 +97,8 @@ hf download thinkingmachines/Inkling-2-Mini --revision ed40e7da625f594fc9c4990f5
 . launch/image.env && docker pull "$IMAGE"
 
 bash launch/2gpu.sh                    # two GPUs, 262K context
+PROFILE=512k bash launch/2gpu.sh       # two GPUs, 512K context, bf16 KV (same speed)
+PROFILE=1m bash launch/2gpu.sh         # two GPUs, 1M context, FP8 KV (cold 1M prompt ~20 min)
 bash launch/1gpu.sh                    # one GPU (GPU=0|1), 128K context
 PROFILE=262k bash launch/1gpu.sh       # one GPU, 262K context, FP8 KV (slower long prompts)
 ```
@@ -120,6 +130,8 @@ bash tests/kernels/run.sh                            # bit-exactness of the new 
 | `tests/prefix_midprobe.py` | agent-style turns: same 13K prefix, different user message |
 | `tests/concurrency.py` | total and per-stream throughput with 1-8 concurrent streams |
 | `tests/needle.py` | find a planted line in a long code haystack at 5% and 90% depth, near max context |
+| `tests/agent_turns.py` | agent-style transcript (system prompt, tool calls, file reads) at a given length with planted facts: cold turn, warm turn, all facts at once, first turn after compaction; TTFT, cached tokens, decode, peak VRAM |
+| `tests/second_stream.py` | a second agent joins while the first streams: the first agent's speed before / during / after, the newcomer's TTFT |
 | `tests/greedy_check.py` | temp-0 outputs identical across runs (8 prompts) |
 | `tests/mmlu_letters.py` | MMLU 57 subjects x 20 questions, letter logits, sequential (`tests/data`, MIT-licensed MMLU) |
 | `tests/kernels/` | parallel MoE align (35 cases) and 2-pass attn_res (72 cases) vs the stock kernels, `torch.equal`; software FP8 E4M3 encode/decode vs `torch.float8_e4m3fn`, bit-exact |
@@ -177,7 +189,7 @@ the [single-3090 vLLM fork](https://github.com/Hiutaky/vllm/tree/ampere-port), q
 | [#2](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/2) | FP8 E4M3 KV cache, emulated on sm_86 (the model is built for a unit-scale FP8 cache) | ~2x context on both profiles | **done** (`KV_DTYPE=fp8`; 1 GPU: 262K; 2 GPUs: the `1m` profile) |
 | [#3](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/3) | more 2-GPU context: async off + larger `MAXLEN` (~3 GiB per card is unused at 262K) | 262K -> ~400K+ | **done** (`PROFILE=512k` bf16, `PROFILE=1m` FP8; see the long-context table) |
 | [#4](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/4) | multi-request throughput: decode attention split count, adaptive draft length, sm_86 expert-GEMM configs, more `MAXSEQS` | today 445 tok/s at 8 streams vs 690-750 in other ports | after 1-2 |
-| [#5](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/5) | numbers on other cards (3090 Ti, A5000, A6000, 4090), NVLink pairs, stock cards without gpu-unlock | coverage | **help wanted**: open a benchmark report |
+| [#5](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/5) | numbers on other cards (3090 Ti, A5000, A6000, 4090), NVLink pairs, stock cards without gpu-unlock | coverage | **help wanted**: open a benchmark report (2x A40 reported, thanks buzz) |
 | [#6](https://github.com/lulakien/inkling2-mini-3090-recipe/issues/6) | P2P via a patched open driver vs this repo's host-memory all-reduce, measured per all-reduce | 2-GPU decode | help wanted |
 | 7 | rebase onto upstream Ampere support once vllm#69165 ships | less patching | waiting |
 
@@ -215,7 +227,8 @@ unlock while the module stays loaded (seen here once: 64 instead of 91 TFLOPS, p
 - **Tied to one image build.** Every overlay replaces a whole file of that exact build (vLLM `g7cb5dae22`).
   Pull by digest (`launch/image.env`). A newer `:inkling-2-mini` tag will probably need the patches rebased.
   `patches/diffs/` shows every change.
-- **Tested only on RTX 3090 (sm_86).** Other 24 GB+ Ampere cards (3090 Ti, A5000, A6000) should behave the same
+- **Tested here only on RTX 3090 (sm_86).** A community report shows the 2-GPU profile on 2x A40 (vLLM built from
+  source with these overlays, see above). Other 24 GB+ Ampere cards (3090 Ti, A5000, A6000) should behave the same
   but are untested. Ada (sm_89) is untested. One GPU needs 24 GB: the weights alone take 16.5 GiB.
 - **The GPUs must be headless for the single-GPU profiles.** They allocate the whole card (GMU 1.0, 512 MiB margin).
   A desktop or a game on the same card makes boot fail or the server run out of memory under load. Shared cards are
@@ -260,12 +273,14 @@ unlock while the module stays loaded (seen here once: 64 instead of 91 TFLOPS, p
 ## Layout
 
 ```
-launch/     serve.sh (all switches), 2gpu.sh, 1gpu.sh (PROFILE=128k|262k), image.env (pinned image digest)
+launch/     serve.sh (all switches), 2gpu.sh (PROFILE=262k|512k|1m), 1gpu.sh (PROFILE=128k|262k), image.env (pinned image digest)
 patches/    files mounted over the image (+ hostar/ host-memory collectives, diffs/ vs the stock files)
 tests/      run_suite.sh and the tests above, data/ (MMLU subset), kernels/ (bit-exactness harnesses)
 tools/      fetch_haystack.sh, gpu_summary.py, gemm_tflops.py, make_diffs.sh, env_report.sh (for issues)
 results/    raw JSON per profile: 2gpu, 1gpu_128k, 1gpu_262k, 2gpu_port_only, 2gpu_nospec, 2gpu_vision, kernels;
-            old/ has superseded single-GPU runs (64K, 512-token 128K, development runs)
+            old/ has superseded single-GPU runs (64K, 512-token 128K, development runs);
+            community/ has reports from other hardware (2x A40)
+experiments/ long-context-2gpu: FP8 / SCONV_TAIL / varloop shared-KV matrix, second-agent test, 2DSD attempt
 docs/       NOTES.md: engineering notes, where the time goes, what was tried and rejected
 gpu-unlock/ how this machine keeps the unlock boot entry current (CachyOS + Limine specific)
 ```

@@ -7,7 +7,8 @@ The open problems are listed in the README's [Roadmap](README.md#roadmap--help-w
 
 Start a profile, run `tests/run_suite.sh` (or only `spec_bench.py` and `prefill_ttft.py`), and open a
 **Benchmark report** issue with the output of `bash tools/env_report.sh`. Other GPUs (3090 Ti, A5000, A6000,
-4090), NVLink pairs, stock cards without gpu-unlock, and other power limits are all missing today.
+4090), NVLink pairs, stock cards without gpu-unlock, and other power limits are all missing today. Reports are
+credited in the README and kept in `results/community/` (the first one: 2x A40 by buzz, issue #3).
 
 ## How the repo is put together
 
