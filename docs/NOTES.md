@@ -83,7 +83,9 @@ TP2 prefill is PCIe-bound: before these patches NCCL all-reduce was 41% of each 
   before every row's bias extent (no bias, no masks), then the unchanged loop runs the rest; same splits and online
   softmax, no second kernel or merge. x1.25-1.27 bf16 (= FA2 on the same shape), x1.13-1.15 FP8 (bound by the
   software E4M3 decode); 500K cold 167 -> ~145 s (4 runs, 144-146 s). Output differs from the shipped kernel at fp32 rounding level
-  (max relative 1.4e-4); with the switch off the kernel is bit-identical to the shipped one.
+  (max relative 1.4e-4); with the switch off the kernel is bit-identical to the shipped one. The same kernel serves
+  decode and DSpark verify on sm_86, so the switch changes long-context decode numerics too (no decode speed change:
+  decode attention already streams KV at ~94% of memory bandwidth).
 - **Parallel MoE align** (`ALIGN_MODE=auto`): 193 -> 42 us per align at 8192 routes; 35/35 cases `torch.equal`.
 - **2-pass attn_res** (`ATTN_RES_2PASS=1`): sources read twice instead of three times; 72/72 cases `torch.equal`.
   The last two together: +3.4% (1 GPU), +7.5% (2 GPUs, bigger chunks).

@@ -78,7 +78,7 @@ text (4.8 vs 4.5 tokens per step on code), not from a faster step.
 work on keys more than 1,024 tokens back (x1.25 on that kernel with bf16 KV, x1.15 with FP8): **500K cold 167 s -> ~145 s** (4 runs: 144-146 s)
 on `512k`. On `1m`, `MNBT=2048` also lets the copy-engine prefill pipeline run (its 1024-token chunks were below the
 pipeline's minimum); the two together take **1.04M cold from 19.5 min to 14.9 min** (250K: 102 s -> 79 s; pool 1.29M).
-Not bit-identical: fp32-rounding-level differences, retrieval unchanged (`experiments/prefill/RESULTS.md`).
+Not bit-identical: fp32-rounding-level differences (in prefill and, at long context, decode), retrieval unchanged (`experiments/prefill/RESULTS.md`).
 
 A second agent joining a long-running one stalls the first to ~11 tok/s while its own prompt prefills (11-18 s for
 64K), then both decode at about three quarters of the single-stream speed.

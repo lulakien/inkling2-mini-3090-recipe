@@ -17,9 +17,9 @@
 #   HOSTAR=0    TP2 small all-reduce/all-gather through mapped host memory off        [1]
 #   CEAR=0      TP2 prefill all-reduce on the copy engines off                        [1]
 #   ATTN_SPLITK full-attention prefill split-KV (0 = shipped kernel)                  [5]
-#   FAR_ATTN=1  prefill attention skips the relative-bias work on key blocks more than 1024 tokens back:
-#               x1.25 (bf16) / x1.15 (fp8) on that kernel, 500K cold 167 -> ~145 s; fp32-rounding-level
-#               differences, not bit-identical (see experiments/prefill)                    [0]
+#   FAR_ATTN=1  full attention skips the relative-bias work on key blocks more than 1024 tokens back:
+#               x1.25 (bf16) / x1.15 (fp8) on the prefill kernel, 500K cold 167 -> ~145 s; also runs in decode/verify
+#               (no speed change there); fp32-rounding-level differences, not bit-identical (experiments/prefill) [0]
 #   ALIGN_MODE  MoE align: auto (parallel kernel for >=2048 routes) | legacy          [auto]
 #   ATTN_RES_2PASS=0  stock 3-pass attn_res prefill kernel                            [1]
 #   EMBED_HOST=1      input embedding table in pinned host memory (1-GPU profiles)    [0]

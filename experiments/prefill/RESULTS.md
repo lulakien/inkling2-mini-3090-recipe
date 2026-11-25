@@ -58,7 +58,10 @@ End to end (`round2.sh`, 512k profile, cold needles):
 | 500K, needle at 50%, same boot | | 145.8 s, found |
 
 KV pool unchanged (kernel-only change, verified on the 1m profile: 1,290,023 tokens with and without).
-Decode is untouched: decode/verify run `rel_decode_attention`, and the draft path (DRAFT) skips the fast loop.
+Correction (2026-11-25): decode and DSpark verify are NOT untouched. On sm_86 the image's `rel_decode_attention` calls
+this same `rel_attention`, so the fast loop also runs for decode/verify on the full-attention layers (only the
+drafter's own attention, DRAFT, skips it). Measured on one GPU (`onecard/RESULTS.md`, P2): no decode speed change
+(120K: 24.16 -> 24.00 ms/step), but long-context decode output changes at the same rounding level as prefill.
 
 Four cold 500K runs: 144.3-145.8 s (-13%). Short of the 140 s target. The rest is mostly the exposed all-reduce copies:
 - CEAR tail in 4 x 512-row pieces (default 2 x 1024), with the far path: 500K **147.3 s** (slower than 144.3 s),
